@@ -1,0 +1,23 @@
+{
+  "_note": "The 77 districts of Nepal, grouped by the 7 provinces. Used for general-area reports where someone knows the district but not an exact point.",
+  "provinces": [
+    { "name": "Koshi", "districts": ["Bhojpur","Dhankuta","Ilam","Jhapa","Khotang","Morang","Okhaldhunga","Panchthar","Sankhuwasabha","Solukhumbu","Sunsari","Taplejung","Terhathum","Udayapur"] },
+    { "name": "Madhesh", "districts": ["Bara","Dhanusha","Mahottari","Parsa","Rautahat","Saptari","Sarlahi","Siraha"] },
+    { "name": "Bagmati", "districts": ["Bhaktapur","Chitwan","Dhading","Dolakha","Kathmandu","Kavrepalanchok","Lalitpur","Makwanpur","Nuwakot","Ramechhap","Rasuwa","Sindhuli","Sindhupalchok"] },
+    { "name": "Gandaki", "districts": ["Baglung","Gorkha","Kaski","Lamjung","Manang","Mustang","Myagdi","Nawalpur","Parbat","Syangja","Tanahun"] },
+    { "name": "Lumbini", "districts": ["Arghakhanchi","Banke","Bardiya","Dang","Eastern Rukum","Gulmi","Kapilvastu","Palpa","Parasi","Pyuthan","Rolpa","Rupandehi"] },
+    { "name": "Karnali", "districts": ["Dailekh","Dolpa","Humla","Jajarkot","Jumla","Kalikot","Mugu","Salyan","Surkhet","Western Rukum"] },
+    { "name": "Sudurpashchim", "districts": ["Achham","Baitadi","Bajhang","Bajura","Dadeldhura","Darchula","Doti","Kailali","Kanchanpur"] }
+  ],
+  "centroids": {
+    "Solukhumbu": [27.70, 86.71], "Dolakha": [27.78, 86.18], "Sankhuwasabha": [27.50, 87.25],
+    "Manang": [28.62, 84.10], "Lamjung": [28.23, 84.38], "Rasuwa": [28.12, 85.35],
+    "Nuwakot": [27.92, 85.16], "Sindhupalchok": [27.85, 85.70], "Taplejung": [27.42, 87.75],
+    "Kathmandu": [27.72, 85.32], "Dhankuta": [26.98, 87.34], "Khotang": [27.20, 86.78],
+    "Okhaldhunga": [27.32, 86.50], "Ramechhap": [27.33, 86.08], "Kavrepalanchok": [27.58, 85.55],
+    "Gorkha": [28.20, 84.63], "Mustang": [28.90, 83.80], "Myagdi": [28.60, 83.55],
+    "Kaski": [28.26, 83.97], "Bajhang": [29.55, 81.20], "Darchula": [29.85, 80.55],
+    "Humla": [29.97, 81.83], "Mugu": [29.55, 82.20], "Dolpa": [29.05, 82.90],
+    "Jumla": [29.27, 82.18], "Bajura": [29.42, 81.52]
+  }
+}

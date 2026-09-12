@@ -1,0 +1,82 @@
+{
+  "_note": "Documented glacial lake outburst floods affecting Nepal, compiled from published GLOF literature. Dates and impact figures vary between sources; treat these as indicative. Coordinates are the source lake or breach area and are approximate.",
+  "events": [
+    {
+      "id": "e1",
+      "name": "Nare Drangka",
+      "date": "1977-09-03",
+      "date_precision": "day",
+      "lake": "Nare (Langmoche)",
+      "basin": "Dudh Koshi",
+      "lat": 27.833, "lon": 86.833,
+      "summary": "Outburst from a moraine-dammed lake below Ama Dablam. Damaged trails and bridges in the Imja Khola valley.",
+      "confidence": "well documented"
+    },
+    {
+      "id": "e2",
+      "name": "Dig Tsho",
+      "date": "1985-08-04",
+      "date_precision": "day",
+      "lake": "Dig Tsho",
+      "basin": "Dudh Koshi",
+      "lat": 27.880, "lon": 86.590,
+      "summary": "The most-cited Nepali GLOF. An ice avalanche into the lake overtopped the moraine dam; the flood destroyed the nearly finished Namche small hydropower plant, along with bridges, trails and farmland far downstream.",
+      "confidence": "well documented"
+    },
+    {
+      "id": "e3",
+      "name": "Chubung",
+      "date": "1991-07-12",
+      "date_precision": "day",
+      "lake": "Chubung",
+      "basin": "Tama Koshi",
+      "lat": 27.870, "lon": 86.430,
+      "summary": "Moraine-dam failure in the Rolwaling valley, upstream of Beding.",
+      "confidence": "documented"
+    },
+    {
+      "id": "e4",
+      "name": "Tam Pokhari (Sabai Tsho)",
+      "date": "1998-09-03",
+      "date_precision": "day",
+      "lake": "Tam Pokhari",
+      "basin": "Hongu",
+      "lat": 27.735, "lon": 86.838,
+      "summary": "Breach released a large flood down the Hinku and Dudh Koshi, destroying bridges and killing livestock; damage was reported far downstream.",
+      "confidence": "well documented"
+    },
+    {
+      "id": "e5",
+      "name": "Zhangzangbo",
+      "date": "1981-07-11",
+      "date_precision": "day",
+      "lake": "Zhangzangbo (Tibet)",
+      "basin": "Bhote Koshi",
+      "lat": 28.060, "lon": 85.950,
+      "summary": "Transboundary GLOF from a lake in Tibet. The flood swept down the Bhote Koshi into Nepal, destroying sections of the Arniko Highway and the Friendship Bridge — a reminder that GLOF risk does not stop at the border.",
+      "confidence": "well documented"
+    },
+    {
+      "id": "e6",
+      "name": "Langmale",
+      "date": "2017-04-20",
+      "date_precision": "day",
+      "lake": "Langmale",
+      "basin": "Barun",
+      "lat": 27.810, "lon": 87.080,
+      "summary": "Rock and ice avalanche into a lake in the Barun valley triggered a debris flood that reached the Arun, damaging trails and settlements downstream.",
+      "confidence": "documented"
+    },
+    {
+      "id": "e7",
+      "name": "Melamchi debris flood",
+      "date": "2021-06-15",
+      "date_precision": "day",
+      "lake": null,
+      "basin": "Indrawati",
+      "lat": 28.020, "lon": 85.560,
+      "summary": "Major debris flood down the Melamchi Khola that devastated Melamchi bazaar. Whether a glacial lake outburst contributed is debated in the literature — sediment supply and extreme rainfall are the leading explanations. Included because it shows the same downstream hazard pattern.",
+      "confidence": "cause debated"
+    }
+  ]
+}

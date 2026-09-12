@@ -1,0 +1,11 @@
+{
+  "name": "glof-geo-extract",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Extracts and simplifies Nepal + neighbour boundaries from Natural Earth 10m into geo_context.json",
+  "scripts": { "build": "node extract_geo.js" },
+  "dependencies": {
+    "world-atlas": "^2.0.2",
+    "topojson-client": "^3.1.0"
+  }
+}

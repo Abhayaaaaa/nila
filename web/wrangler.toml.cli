@@ -1,0 +1,10 @@
+name = "nila"
+compatibility_date = "2026-01-01"
+pages_build_output_dir = "public"
+
+# Created with:  wrangler d1 create nila-reports
+# Paste the database_id it prints into the line below.
+[[d1_databases]]
+binding = "DB"
+database_name = "nila-reports"
+database_id = "PASTE_YOUR_DATABASE_ID_HERE"

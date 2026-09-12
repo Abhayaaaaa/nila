@@ -1,0 +1,702 @@
+{
+ "_note": "Approximate coordinates for well-known settlements and trail points in the valleys below the monitored lakes. Positions are rounded and indicative, not survey-grade. 'basins' lists the upstream river basins whose water passes this place, used to relate a settlement to lakes in the same river system. This is a river-system + elevation relationship, NOT a hydraulic flood model.",
+ "basin_parents": {
+  "Hongu": "Dudh Koshi",
+  "Barun": "Arun"
+ },
+ "places": [
+  {
+   "id": "p1",
+   "name": "Lukla",
+   "district": "Solukhumbu",
+   "elevation_m": 2860,
+   "lat": 27.687,
+   "lon": 86.731,
+   "basins": [
+    "Dudh Koshi",
+    "Hongu"
+   ],
+   "note": "Main airstrip and trailhead for the Everest region."
+  },
+  {
+   "id": "p2",
+   "name": "Phakding",
+   "district": "Solukhumbu",
+   "elevation_m": 2610,
+   "lat": 27.742,
+   "lon": 86.713,
+   "basins": [
+    "Dudh Koshi",
+    "Hongu"
+   ],
+   "note": "Riverside trekking village on the Dudh Koshi."
+  },
+  {
+   "id": "p3",
+   "name": "Namche Bazaar",
+   "district": "Solukhumbu",
+   "elevation_m": 3440,
+   "lat": 27.807,
+   "lon": 86.714,
+   "basins": [
+    "Dudh Koshi",
+    "Hongu"
+   ],
+   "note": "Largest town in the Khumbu; main trading and acclimatisation hub."
+  },
+  {
+   "id": "p4",
+   "name": "Tengboche",
+   "district": "Solukhumbu",
+   "elevation_m": 3867,
+   "lat": 27.836,
+   "lon": 86.764,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Monastery settlement above the Imja Khola confluence."
+  },
+  {
+   "id": "p5",
+   "name": "Dingboche",
+   "district": "Solukhumbu",
+   "elevation_m": 4410,
+   "lat": 27.892,
+   "lon": 86.832,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Village in the Imja valley, downstream of Imja Tsho."
+  },
+  {
+   "id": "p6",
+   "name": "Chukhung",
+   "district": "Solukhumbu",
+   "elevation_m": 4730,
+   "lat": 27.905,
+   "lon": 86.885,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Seasonal settlement directly below the Imja glacier system."
+  },
+  {
+   "id": "p7",
+   "name": "Beding",
+   "district": "Dolakha",
+   "elevation_m": 3690,
+   "lat": 27.855,
+   "lon": 86.396,
+   "basins": [
+    "Tama Koshi"
+   ],
+   "note": "Sherpa village in the Rolwaling valley below Tsho Rolpa."
+  },
+  {
+   "id": "p8",
+   "name": "Simigaun",
+   "district": "Dolakha",
+   "elevation_m": 2000,
+   "lat": 27.775,
+   "lon": 86.345,
+   "basins": [
+    "Tama Koshi"
+   ],
+   "note": "Village at the lower end of the Rolwaling valley."
+  },
+  {
+   "id": "p9",
+   "name": "Singati",
+   "district": "Dolakha",
+   "elevation_m": 1000,
+   "lat": 27.617,
+   "lon": 86.17,
+   "basins": [
+    "Tama Koshi"
+   ],
+   "note": "Bazaar town on the Tama Koshi road corridor."
+  },
+  {
+   "id": "p10",
+   "name": "Charikot",
+   "district": "Dolakha",
+   "elevation_m": 1980,
+   "lat": 27.671,
+   "lon": 86.055,
+   "basins": [
+    "Tama Koshi"
+   ],
+   "note": "District headquarters of Dolakha."
+  },
+  {
+   "id": "p11",
+   "name": "Num",
+   "district": "Sankhuwasabha",
+   "elevation_m": 1500,
+   "lat": 27.548,
+   "lon": 87.276,
+   "basins": [
+    "Barun",
+    "Arun"
+   ],
+   "note": "Hillside village above the Arun\u2013Barun confluence."
+  },
+  {
+   "id": "p12",
+   "name": "Khandbari",
+   "district": "Sankhuwasabha",
+   "elevation_m": 1040,
+   "lat": 27.374,
+   "lon": 87.209,
+   "basins": [
+    "Barun",
+    "Arun"
+   ],
+   "note": "District headquarters of Sankhuwasabha."
+  },
+  {
+   "id": "p13",
+   "name": "Tumlingtar",
+   "district": "Sankhuwasabha",
+   "elevation_m": 300,
+   "lat": 27.315,
+   "lon": 87.194,
+   "basins": [
+    "Barun",
+    "Arun"
+   ],
+   "note": "Airstrip town on the lower Arun valley floor."
+  },
+  {
+   "id": "p14",
+   "name": "Chame",
+   "district": "Manang",
+   "elevation_m": 2670,
+   "lat": 28.552,
+   "lon": 84.239,
+   "basins": [
+    "Marsyangdi"
+   ],
+   "note": "District headquarters of Manang, on the Marsyangdi."
+  },
+  {
+   "id": "p15",
+   "name": "Dharapani",
+   "district": "Manang",
+   "elevation_m": 1860,
+   "lat": 28.518,
+   "lon": 84.359,
+   "basins": [
+    "Marsyangdi"
+   ],
+   "note": "Trail junction village on the Marsyangdi."
+  },
+  {
+   "id": "p16",
+   "name": "Besisahar",
+   "district": "Lamjung",
+   "elevation_m": 760,
+   "lat": 28.23,
+   "lon": 84.377,
+   "basins": [
+    "Marsyangdi"
+   ],
+   "note": "Road head and district headquarters of Lamjung."
+  },
+  {
+   "id": "p17",
+   "name": "Syabrubesi",
+   "district": "Rasuwa",
+   "elevation_m": 1460,
+   "lat": 28.163,
+   "lon": 85.335,
+   "basins": [
+    "Trishuli"
+   ],
+   "note": "Trailhead village at the Langtang\u2013Trishuli confluence."
+  },
+  {
+   "id": "p18",
+   "name": "Dhunche",
+   "district": "Rasuwa",
+   "elevation_m": 1960,
+   "lat": 28.111,
+   "lon": 85.296,
+   "basins": [
+    "Trishuli"
+   ],
+   "note": "District headquarters of Rasuwa."
+  },
+  {
+   "id": "p19",
+   "name": "Betrawati",
+   "district": "Nuwakot",
+   "elevation_m": 600,
+   "lat": 27.96,
+   "lon": 85.183,
+   "basins": [
+    "Trishuli"
+   ],
+   "note": "Bridge town on the lower Trishuli."
+  },
+  {
+   "id": "p20",
+   "name": "Melamchi",
+   "district": "Sindhupalchok",
+   "elevation_m": 870,
+   "lat": 27.83,
+   "lon": 85.57,
+   "basins": [
+    "Indrawati"
+   ],
+   "note": "Town on the Indrawati; hit by a major debris flood in June 2021."
+  },
+  {
+   "id": "p21",
+   "name": "Chautara",
+   "district": "Sindhupalchok",
+   "elevation_m": 1400,
+   "lat": 27.78,
+   "lon": 85.72,
+   "basins": [
+    "Indrawati"
+   ],
+   "note": "District headquarters of Sindhupalchok."
+  },
+  {
+   "id": "p22",
+   "name": "Taplejung",
+   "district": "Taplejung",
+   "elevation_m": 1820,
+   "lat": 27.355,
+   "lon": 87.669,
+   "basins": [
+    "Tamor"
+   ],
+   "note": "District headquarters above the Tamor valley."
+  },
+  {
+   "id": "p23",
+   "name": "Kathmandu",
+   "district": "Kathmandu",
+   "elevation_m": 1400,
+   "lat": 27.717,
+   "lon": 85.324,
+   "basins": [],
+   "note": "Shown for orientation only. Kathmandu sits in the Bagmati basin and is not downstream of any lake in this inventory."
+  },
+  {
+   "id": "p24",
+   "name": "Manang",
+   "district": "Manang",
+   "elevation_m": 3519,
+   "lat": 28.667,
+   "lon": 84.017,
+   "basins": [
+    "Marsyangdi"
+   ],
+   "note": "Main village of upper Manang, on the Marsyangdi below Tilicho."
+  },
+  {
+   "id": "p25",
+   "name": "Barhabise",
+   "district": "Sindhupalchok",
+   "elevation_m": 850,
+   "lat": 27.78,
+   "lon": 85.897,
+   "basins": [
+    "Bhote Koshi"
+   ],
+   "note": "Bazaar town on the Arniko Highway, hit by the 1981 Zhangzangbo transboundary flood."
+  },
+  {
+   "id": "p26",
+   "name": "Kodari",
+   "district": "Sindhupalchok",
+   "elevation_m": 1640,
+   "lat": 27.965,
+   "lon": 85.962,
+   "basins": [
+    "Bhote Koshi"
+   ],
+   "note": "Border town at the Nepal\u2013China Friendship Bridge."
+  },
+  {
+   "id": "p27",
+   "name": "Salleri",
+   "district": "Solukhumbu",
+   "elevation_m": 2390,
+   "lat": 27.5,
+   "lon": 86.59,
+   "basins": [
+    "Dudh Koshi",
+    "Hongu"
+   ],
+   "note": "District headquarters of Solukhumbu."
+  },
+  {
+   "id": "p28",
+   "name": "Phaplu",
+   "district": "Solukhumbu",
+   "elevation_m": 2470,
+   "lat": 27.517,
+   "lon": 86.585,
+   "basins": [
+    "Dudh Koshi",
+    "Hongu"
+   ],
+   "note": "Airstrip serving the lower Khumbu."
+  },
+  {
+   "id": "p29",
+   "name": "Kharikhola",
+   "district": "Solukhumbu",
+   "elevation_m": 2040,
+   "lat": 27.583,
+   "lon": 86.7,
+   "basins": [
+    "Dudh Koshi",
+    "Hongu"
+   ],
+   "note": "Trail village on the Jiri\u2013Lukla route."
+  },
+  {
+   "id": "p30",
+   "name": "Monjo",
+   "district": "Solukhumbu",
+   "elevation_m": 2835,
+   "lat": 27.75,
+   "lon": 86.722,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Village at the Sagarmatha National Park entrance."
+  },
+  {
+   "id": "p31",
+   "name": "Khumjung",
+   "district": "Solukhumbu",
+   "elevation_m": 3790,
+   "lat": 27.821,
+   "lon": 86.712,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Large Sherpa village above Namche."
+  },
+  {
+   "id": "p32",
+   "name": "Thame",
+   "district": "Solukhumbu",
+   "elevation_m": 3800,
+   "lat": 27.845,
+   "lon": 86.652,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Village in the Bhote Koshi (Nangpa) side valley below Dig Tsho."
+  },
+  {
+   "id": "p33",
+   "name": "Pangboche",
+   "district": "Solukhumbu",
+   "elevation_m": 3985,
+   "lat": 27.857,
+   "lon": 86.794,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Highest year-round village in the Imja valley."
+  },
+  {
+   "id": "p34",
+   "name": "Pheriche",
+   "district": "Solukhumbu",
+   "elevation_m": 4371,
+   "lat": 27.895,
+   "lon": 86.819,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Trekking settlement with a seasonal aid post."
+  },
+  {
+   "id": "p35",
+   "name": "Lobuche",
+   "district": "Solukhumbu",
+   "elevation_m": 4940,
+   "lat": 27.95,
+   "lon": 86.81,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "High camp on the Khumbu glacier approach."
+  },
+  {
+   "id": "p36",
+   "name": "Gorak Shep",
+   "district": "Solukhumbu",
+   "elevation_m": 5164,
+   "lat": 27.981,
+   "lon": 86.828,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Last settlement before Everest Base Camp."
+  },
+  {
+   "id": "p37",
+   "name": "Gokyo",
+   "district": "Solukhumbu",
+   "elevation_m": 4790,
+   "lat": 27.955,
+   "lon": 86.694,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Lakeside settlement beside the Gokyo lakes."
+  },
+  {
+   "id": "p38",
+   "name": "Machhermo",
+   "district": "Solukhumbu",
+   "elevation_m": 4470,
+   "lat": 27.93,
+   "lon": 86.69,
+   "basins": [
+    "Dudh Koshi"
+   ],
+   "note": "Valley settlement on the Gokyo trail."
+  },
+  {
+   "id": "p39",
+   "name": "Kothe",
+   "district": "Solukhumbu",
+   "elevation_m": 3600,
+   "lat": 27.65,
+   "lon": 86.83,
+   "basins": [
+    "Hongu"
+   ],
+   "note": "Hinku valley settlement below Tam Pokhari."
+  },
+  {
+   "id": "p40",
+   "name": "Tagnag",
+   "district": "Solukhumbu",
+   "elevation_m": 4350,
+   "lat": 27.7,
+   "lon": 86.85,
+   "basins": [
+    "Hongu"
+   ],
+   "note": "Seasonal herders' settlement in the Hinku valley."
+  },
+  {
+   "id": "p41",
+   "name": "Khare",
+   "district": "Solukhumbu",
+   "elevation_m": 4900,
+   "lat": 27.72,
+   "lon": 86.85,
+   "basins": [
+    "Hongu"
+   ],
+   "note": "Base for Mera Peak, high in the Hinku."
+  },
+  {
+   "id": "p42",
+   "name": "Na Gaon",
+   "district": "Dolakha",
+   "elevation_m": 4180,
+   "lat": 27.87,
+   "lon": 86.42,
+   "basins": [
+    "Tama Koshi"
+   ],
+   "note": "Summer settlement in upper Rolwaling, closest to Tsho Rolpa."
+  },
+  {
+   "id": "p43",
+   "name": "Lamabagar",
+   "district": "Dolakha",
+   "elevation_m": 2000,
+   "lat": 27.9,
+   "lon": 86.32,
+   "basins": [
+    "Tama Koshi"
+   ],
+   "note": "Roadhead village in the upper Tama Koshi."
+  },
+  {
+   "id": "p44",
+   "name": "Jiri",
+   "district": "Dolakha",
+   "elevation_m": 1905,
+   "lat": 27.6,
+   "lon": 86.23,
+   "basins": [
+    "Tama Koshi"
+   ],
+   "note": "Classic trailhead town for the Everest route."
+  },
+  {
+   "id": "p45",
+   "name": "Tashigaon",
+   "district": "Sankhuwasabha",
+   "elevation_m": 2100,
+   "lat": 27.65,
+   "lon": 87.25,
+   "basins": [
+    "Barun",
+    "Arun"
+   ],
+   "note": "Last permanent village on the Makalu Base Camp trail."
+  },
+  {
+   "id": "p46",
+   "name": "Sedua",
+   "district": "Sankhuwasabha",
+   "elevation_m": 1500,
+   "lat": 27.6,
+   "lon": 87.28,
+   "basins": [
+    "Barun",
+    "Arun"
+   ],
+   "note": "Village above the Arun\u2013Barun confluence."
+  },
+  {
+   "id": "p47",
+   "name": "Pisang",
+   "district": "Manang",
+   "elevation_m": 3300,
+   "lat": 28.6,
+   "lon": 84.13,
+   "basins": [
+    "Marsyangdi"
+   ],
+   "note": "Village on the Annapurna circuit below Manang."
+  },
+  {
+   "id": "p48",
+   "name": "Tal",
+   "district": "Manang",
+   "elevation_m": 1700,
+   "lat": 28.47,
+   "lon": 84.4,
+   "basins": [
+    "Marsyangdi"
+   ],
+   "note": "Village on a former lakebed in the Marsyangdi gorge."
+  },
+  {
+   "id": "p49",
+   "name": "Bhulbhule",
+   "district": "Lamjung",
+   "elevation_m": 840,
+   "lat": 28.3,
+   "lon": 84.4,
+   "basins": [
+    "Marsyangdi"
+   ],
+   "note": "Riverside village on the lower Marsyangdi."
+  },
+  {
+   "id": "p50",
+   "name": "Langtang village",
+   "district": "Rasuwa",
+   "elevation_m": 3430,
+   "lat": 28.213,
+   "lon": 85.545,
+   "basins": [
+    "Trishuli"
+   ],
+   "note": "Village destroyed by an avalanche in the 2015 earthquake and since rebuilt."
+  },
+  {
+   "id": "p51",
+   "name": "Kyanjin Gompa",
+   "district": "Rasuwa",
+   "elevation_m": 3870,
+   "lat": 28.211,
+   "lon": 85.564,
+   "basins": [
+    "Trishuli"
+   ],
+   "note": "Highest settlement in the Langtang valley."
+  },
+  {
+   "id": "p52",
+   "name": "Thulo Syabru",
+   "district": "Rasuwa",
+   "elevation_m": 2260,
+   "lat": 28.15,
+   "lon": 85.36,
+   "basins": [
+    "Trishuli"
+   ],
+   "note": "Hillside village above the Langtang confluence."
+  },
+  {
+   "id": "p53",
+   "name": "Bidur",
+   "district": "Nuwakot",
+   "elevation_m": 600,
+   "lat": 27.92,
+   "lon": 85.15,
+   "basins": [
+    "Trishuli"
+   ],
+   "note": "District headquarters of Nuwakot on the Trishuli."
+  },
+  {
+   "id": "p54",
+   "name": "Ghunsa",
+   "district": "Taplejung",
+   "elevation_m": 3595,
+   "lat": 27.66,
+   "lon": 87.94,
+   "basins": [
+    "Tamor"
+   ],
+   "note": "Village on the Kanchenjunga north-base-camp trail."
+  },
+  {
+   "id": "p55",
+   "name": "Chirwa",
+   "district": "Taplejung",
+   "elevation_m": 1270,
+   "lat": 27.48,
+   "lon": 87.8,
+   "basins": [
+    "Tamor"
+   ],
+   "note": "Trail village on the upper Tamor."
+  },
+  {
+   "id": "p56",
+   "name": "Tatopani",
+   "district": "Sindhupalchok",
+   "elevation_m": 1530,
+   "lat": 27.95,
+   "lon": 85.93,
+   "basins": [
+    "Bhote Koshi"
+   ],
+   "note": "Hot-spring village on the Arniko Highway."
+  },
+  {
+   "id": "p57",
+   "name": "Talamarang",
+   "district": "Sindhupalchok",
+   "elevation_m": 1000,
+   "lat": 27.87,
+   "lon": 85.55,
+   "basins": [
+    "Indrawati"
+   ],
+   "note": "Village on the Melamchi Khola."
+  }
+ ]
+}

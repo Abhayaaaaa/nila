@@ -1,0 +1,25 @@
+icimod_id,name,district,basin,lat,lon,elevation_m,area_km2,area_1990_km2,dam_type,slope_deg
+NPL-001,Imja Tsho,Solukhumbu,Dudh Koshi,27.8995,86.9310,5010,1.28,0.60,moraine,22
+NPL-002,Tsho Rolpa,Dolakha,Tama Koshi,27.8600,86.4700,4580,1.54,0.80,moraine,18
+NPL-003,Thulagi,Lamjung,Marsyangdi,28.4930,84.4830,4045,0.94,0.66,moraine,25
+NPL-004,Lower Barun,Sankhuwasabha,Barun,27.7950,87.0930,4540,1.80,0.60,moraine,20
+NPL-005,Dig Tsho,Solukhumbu,Dudh Koshi,27.8800,86.5900,4365,0.40,0.42,moraine,30
+NPL-006,Tam Pokhari,Solukhumbu,Hongu,27.7350,86.8380,4430,0.46,0.53,moraine,24
+NPL-007,Chubung,Dolakha,Tama Koshi,27.8700,86.4300,4460,0.10,0.08,moraine,27
+NPL-008,Nare (Langmoche),Solukhumbu,Dudh Koshi,27.8330,86.8330,4500,0.06,0.09,moraine,29
+NPL-009,Chamlang North,Sankhuwasabha,Barun,27.7800,86.9800,4970,0.35,0.19,moraine,28
+NPL-010,Chamlang South,Sankhuwasabha,Barun,27.7600,86.9600,4950,0.61,0.34,moraine,31
+NPL-011,Lumding Tsho,Solukhumbu,Dudh Koshi,27.7300,86.6300,4850,0.79,0.55,moraine,23
+NPL-012,Hongu Tsho,Solukhumbu,Hongu,27.7600,86.9100,5060,0.28,0.17,moraine,26
+NPL-013,Barun Pokhari,Sankhuwasabha,Barun,27.8200,87.0600,4720,0.21,0.16,moraine,24
+NPL-014,Omai Tsho,Dolakha,Tama Koshi,27.9100,86.3400,4400,0.18,0.13,moraine,26
+NPL-015,Thonak Tsho,Solukhumbu,Dudh Koshi,28.0200,86.6800,4990,0.65,0.55,moraine,19
+NPL-016,Gokyo Cho (Dudh Pokhari),Solukhumbu,Dudh Koshi,27.9560,86.6870,4700,0.43,0.42,bedrock,14
+NPL-017,Tilicho,Manang,Marsyangdi,28.6900,83.8500,4919,4.80,4.20,moraine,21
+NPL-018,Langshisha,Rasuwa,Trishuli,28.2100,85.7000,4200,0.12,0.08,moraine,28
+NPL-019,Yalung,Taplejung,Tamor,27.6400,88.0500,4560,0.14,0.09,moraine,30
+NPL-020,Panch Pokhari (Hongu),Solukhumbu,Hongu,27.7000,86.9000,4900,0.15,0.11,moraine,25
+NPL-021,Dudh Kunda,Solukhumbu,Dudh Koshi,27.5700,86.5300,4560,0.09,0.08,bedrock,16
+NPL-022,West Chamjang,Sankhuwasabha,Barun,27.7400,87.0100,5150,0.19,0.11,ice,33
+NPL-023,Langmale,Sankhuwasabha,Barun,27.8100,87.0800,4600,0.24,0.12,moraine,29
+NPL-024,Tsho Og,Dolakha,Tama Koshi,27.8500,86.4600,4520,0.09,0.06,moraine,26

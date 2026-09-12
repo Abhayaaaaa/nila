@@ -1,0 +1,1449 @@
+<title>NILA, the Nepal Ice Lake Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>__LEAFLET_CSS__</style>
+<style>__CLUSTER_CSS__</style>
+
+<style>
+/* ============================================================
+   NILA, the Nepal Ice Lake Atlas. Map-first layout: the map is
+   the page, everything else floats over it.
+   Chrome palette is themed; severity colours are a fixed status
+   palette shown with a label and a meter so nothing depends on
+   colour alone.
+   ============================================================ */
+:root {
+  --ground:#EDF1F1; --surface:#FFFFFF; --surface-2:#F5F8F8; --surface-3:#EAEFEF;
+  --ink:#101A1C; --ink-soft:#3A4B4E; --muted:#617578;
+  --line:#D3DCDC; --line-strong:#B6C4C4;
+  --accent:#14707F; --accent-soft:#E0EFF1; --accent-ink:#FFFFFF;
+  --map-bg:#DCE6E6; --land:#CFDEDB; --land-edge:#4E6F6B; --place:#425558;
+
+  --r-low:#0CA30C; --r-medium:#FAB219; --r-high:#EC835A; --r-very_high:#D03B3B; --r-unknown:#8A9A9C;
+  --r-low-bg:#E6F4E6; --r-medium-bg:#FDF1DA; --r-high-bg:#FCEAE2; --r-very_high-bg:#FAE4E4; --r-unknown-bg:#EAEEEE;
+
+  --warn-bg:#FBF0DA; --warn-line:#E4C583; --warn-ink:#6E4E10;
+  --shadow-sm:0 1px 3px rgba(16,26,28,.12);
+  --shadow:0 2px 6px rgba(16,26,28,.10), 0 12px 32px rgba(16,26,28,.14);
+  --radius:14px;
+  --font-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --font-body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#0D1315; --surface:#141D20; --surface-2:#1A2427; --surface-3:#202B2F;
+    --ink:#E6EDED; --ink-soft:#C2D0D1; --muted:#8A9EA0;
+    --line:#263437; --line-strong:#35474B;
+    --accent:#4FB3C2; --accent-soft:#16333A; --accent-ink:#06181C;
+    --map-bg:#0F1719; --land:#23343A; --land-edge:#6D949C; --place:#9DB2B6;
+    --r-low-bg:#102A12; --r-medium-bg:#33280C; --r-high-bg:#331F16; --r-very_high-bg:#331214; --r-unknown-bg:#1E282B;
+    --warn-bg:#2C2410; --warn-line:#5C4A1C; --warn-ink:#E7CE92;
+    --shadow-sm:0 1px 3px rgba(0,0,0,.5);
+    --shadow:0 2px 6px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:#0D1315; --surface:#141D20; --surface-2:#1A2427; --surface-3:#202B2F;
+  --ink:#E6EDED; --ink-soft:#C2D0D1; --muted:#8A9EA0;
+  --line:#263437; --line-strong:#35474B;
+  --accent:#4FB3C2; --accent-soft:#16333A; --accent-ink:#06181C;
+  --map-bg:#0F1719; --land:#23343A; --land-edge:#6D949C; --place:#9DB2B6;
+  --r-low-bg:#102A12; --r-medium-bg:#33280C; --r-high-bg:#331F16; --r-very_high-bg:#331214; --r-unknown-bg:#1E282B;
+  --warn-bg:#2C2410; --warn-line:#5C4A1C; --warn-ink:#E7CE92;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.5);
+  --shadow:0 2px 6px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.5);
+}
+
+* { box-sizing:border-box; }
+html, body { height:100%; margin:0; overflow:hidden; }
+body {
+  background:var(--ground); color:var(--ink); font-family:var(--font-body);
+  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+button, input, select, textarea { font:inherit; color:inherit; }
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }
+
+/* ---------------- map ---------------- */
+#map { position:absolute; inset:0; background:var(--map-bg); z-index:0; }
+.leaflet-container { background:var(--map-bg); font-family:var(--font-body); }
+.leaflet-control-attribution {
+  background:color-mix(in srgb, var(--surface) 86%, transparent) !important;
+  color:var(--muted) !important; font-size:10px !important;
+}
+.leaflet-control-attribution a { color:var(--muted) !important; }
+body.picking #map { cursor:crosshair; }
+body.picking .leaflet-container { cursor:crosshair; }
+/* While picking a spot, markers must not swallow the click. Without this,
+   clicking a lake would select it instead of dropping the pin, and the user
+   would be stranded in picking mode. */
+body.picking .leaflet-marker-icon,
+body.picking .leaflet-interactive,
+body.picking .leaflet-marker-pane,
+body.picking .marker-cluster { pointer-events:none !important; }
+
+/* marker glyphs */
+.mk-place i {
+  display:block; width:9px; height:9px; background:var(--surface);
+  border:2px solid var(--place); transform:rotate(45deg); box-shadow:var(--shadow-sm);
+}
+.mk-place.on i { background:var(--accent); border-color:var(--accent); }
+.mk-event i {
+  display:block; width:15px; height:15px; border-radius:50%;
+  border:2.5px solid var(--r-very_high); background:transparent;
+}
+.mk-report i {
+  display:block; width:16px; height:16px; border-radius:50% 50% 50% 2px;
+  transform:rotate(45deg); border:2px solid var(--surface); box-shadow:var(--shadow-sm);
+}
+.cluster-pin {
+  width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  color:#fff; font-weight:700; font-size:13px; font-family:var(--font-mono);
+  border:3px solid var(--surface); box-shadow:var(--shadow-sm);
+}
+.cluster-pin.places { background:var(--place); }
+
+/* ---------------- floating UI ---------------- */
+.ui { position:absolute; z-index:500; }
+.card {
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:var(--shadow);
+}
+
+/* search */
+#search-wrap { top:12px; left:12px; width:412px; max-width:calc(100vw - 24px); z-index:700; }
+.searchbar { display:flex; align-items:center; gap:9px; padding:9px 12px; }
+.brand { display:flex; align-items:center; gap:8px; padding-right:10px; border-right:1px solid var(--line); }
+.brand .bt { display:flex; flex-direction:column; justify-content:center; }
+.brand b { font-family:var(--font-display); font-size:14px; letter-spacing:.02em; white-space:nowrap; line-height:1.1; }
+.brand .brand-sub { font-style:normal; font-size:8px; letter-spacing:.04em; color:var(--muted); white-space:nowrap; line-height:1.15; margin-top:1px; }
+.brand .mk { font-size:16px; }
+.searchbar input { flex:1; min-width:0; border:none; background:none; outline:none; font-size:14px; }
+.searchbar input::placeholder { color:var(--muted); }
+.icon-btn {
+  width:30px; height:30px; border-radius:9px; border:1px solid transparent; background:none;
+  color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; flex:none;
+}
+.icon-btn:hover { background:var(--surface-2); color:var(--ink); }
+
+#results { border-top:1px solid var(--line); max-height:320px; overflow-y:auto; }
+#results:empty { display:none; }
+.res {
+  display:flex; align-items:center; gap:10px; width:100%; padding:9px 12px;
+  background:none; border:none; border-bottom:1px solid var(--line); text-align:left; cursor:pointer; color:inherit;
+}
+.res:last-child { border-bottom:none; }
+.res:hover, .res.active { background:var(--surface-2); }
+.res-ic { width:22px; text-align:center; flex:none; font-size:12px; color:var(--muted); }
+.res-main { min-width:0; flex:1; }
+.res-name { display:block; font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.res-sub { display:block; font-size:10.5px; color:var(--muted); }
+
+/* status chip */
+#status-chip { top:12px; right:12px; display:flex; align-items:center; gap:8px; padding:8px 12px; font-size:12px; max-width:min(380px, calc(100vw - 24px)); }
+.live-dot { width:8px; height:8px; border-radius:50%; flex:none; background:var(--muted); }
+.live-dot.ok { background:var(--r-low); }
+.live-dot.warn { background:var(--r-medium); }
+.live-dot.busy { background:var(--accent); animation:pulse 1.1s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+#status-chip .txt { color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* side panel */
+#panel {
+  z-index:500; top:72px; left:12px; bottom:12px; width:376px; max-width:calc(100vw - 24px);
+  display:flex; flex-direction:column; overflow:hidden;
+  transform:translateX(calc(-100% - 16px)); opacity:0; pointer-events:none;
+  transition:transform .28s cubic-bezier(.4,0,.2,1), opacity .2s;
+}
+#panel.open { transform:none; opacity:1; pointer-events:auto; }
+.panel-head {
+  display:flex; align-items:center; gap:8px; padding:11px 12px 11px 15px;
+  border-bottom:1px solid var(--line); flex:none;
+}
+.panel-title {
+  font-family:var(--font-display); font-size:11.5px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.08em; color:var(--muted); margin:0; flex:1;
+}
+.panel-body { overflow-y:auto; flex:1; }
+
+/* FABs */
+#fabs { right:12px; bottom:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+.fab {
+  border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  border-radius:12px; box-shadow:var(--shadow); cursor:pointer;
+  width:44px; height:44px; display:flex; align-items:center; justify-content:center; font-size:17px;
+}
+.fab:hover { border-color:var(--line-strong); }
+.fab[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+.fab-wide {
+  width:auto; padding:0 16px; gap:8px; font-size:14px; font-weight:600;
+  background:var(--accent); border-color:var(--accent); color:var(--accent-ink);
+}
+.fab-wide:hover { filter:brightness(1.08); border-color:var(--accent); }
+.fab-group { display:flex; flex-direction:column; border-radius:12px; overflow:hidden; box-shadow:var(--shadow); border:1px solid var(--line); }
+.fab-group .fab { border:none; border-radius:0; box-shadow:none; border-bottom:1px solid var(--line); }
+.fab-group .fab:last-child { border-bottom:none; }
+
+/* legend */
+#legend { left:12px; bottom:12px; padding:10px 12px; font-size:11px; transition:left .28s cubic-bezier(.4,0,.2,1); }
+body.panel-open #legend { left:400px; }
+#legend.min .lg-body { display:none; }
+.lg-head { display:flex; align-items:center; gap:8px; cursor:pointer; }
+.lg-t { font-family:var(--font-display); font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); flex:1; }
+.lg-row { display:flex; align-items:center; gap:7px; margin-top:4px; color:var(--ink-soft); }
+.lg-dot { width:10px; height:10px; border-radius:50%; flex:none; }
+.lg-sq { width:8px; height:8px; flex:none; background:var(--surface); border:2px solid var(--place); transform:rotate(45deg); }
+.lg-ring { width:10px; height:10px; border-radius:50%; border:2px solid var(--r-very_high); flex:none; }
+
+/* pick banner */
+#pickbar {
+  z-index:800; top:12px; left:50%; transform:translateX(-50%); padding:10px 16px;
+  display:none; align-items:center; gap:12px; font-size:13px;
+  background:var(--accent); color:var(--accent-ink); border:none;
+}
+body.picking #pickbar { display:flex; }
+#pickbar button { background:rgba(255,255,255,.2); border:none; color:inherit; border-radius:8px; padding:5px 11px; cursor:pointer; font-size:12.5px; }
+
+/* ---------------- shared bits ---------------- */
+.sev { display:inline-flex; gap:1.5px; align-items:flex-end; height:11px; flex:none; }
+.sev i { width:2.5px; background:currentColor; opacity:.22; border-radius:1px; display:block; }
+.sev i:nth-child(1){height:4px} .sev i:nth-child(2){height:6.5px}
+.sev i:nth-child(3){height:9px} .sev i:nth-child(4){height:11px}
+.sev i.on { opacity:1; }
+
+.pill { display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; padding:4px 9px; border-radius:999px; }
+.chip { font-family:var(--font-mono); font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; padding:3px 7px; border-radius:5px; border:1px solid var(--line); background:var(--surface-2); color:var(--muted); }
+.chip.hist { background:var(--r-very_high-bg); color:var(--r-very_high); border-color:transparent; }
+
+.detail-body { padding:15px; }
+.detail-name { font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:-.015em; margin:0 0 3px; text-wrap:balance; }
+.detail-loc { color:var(--muted); font-size:12.5px; margin:0 0 10px; }
+.detail-tags { display:flex; gap:6px; flex-wrap:wrap; margin:0 0 14px; }
+
+.score-box { background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:13px; margin-bottom:15px; }
+.score-top { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.score-n { font-family:var(--font-mono); font-weight:600; font-size:29px; letter-spacing:-.03em; font-variant-numeric:tabular-nums; line-height:1; }
+.score-n span { font-size:13px; color:var(--muted); font-weight:400; }
+.ramp { position:relative; height:7px; border-radius:4px; background:linear-gradient(90deg,var(--r-low),var(--r-medium) 34%,var(--r-high) 62%,var(--r-very_high)); }
+.ramp-mark { position:absolute; top:50%; width:15px; height:15px; border-radius:50%; background:var(--surface); border:3px solid var(--ink); transform:translate(-50%,-50%); transition:left .4s cubic-bezier(.4,0,.2,1); }
+.ramp-scale { display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:9.5px; color:var(--muted); margin-top:6px; }
+
+.facts { display:grid; grid-template-columns:1fr 1fr; gap:11px 14px; margin:0 0 16px; }
+.facts dt { font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 2px; font-weight:500; }
+.facts dd { margin:0; font-family:var(--font-mono); font-size:13px; font-weight:500; font-variant-numeric:tabular-nums; }
+
+.sec-h { font-family:var(--font-display); font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin:0 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.sec-h .sec-n { font-family:var(--font-mono); letter-spacing:0; }
+
+.factor { margin-bottom:11px; }
+.f-top { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:5px; }
+.f-name { font-size:12.5px; font-weight:500; }
+.f-flag { font-family:var(--font-mono); font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-left:5px; }
+.f-flag.live { color:var(--r-low); }
+.f-flag.none { color:var(--r-medium); }
+.f-pts { font-family:var(--font-mono); font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; }
+.f-track { position:relative; height:5px; border-radius:3px; background:var(--surface-3); overflow:hidden; }
+.f-fill { position:absolute; left:0; top:0; bottom:0; border-radius:3px; transition:width .4s cubic-bezier(.4,0,.2,1); }
+.f-why { font-size:11px; color:var(--muted); margin-top:4px; }
+
+.rel { display:flex; align-items:center; gap:9px; padding:9px 10px; border:1px solid var(--line); border-radius:9px; margin-bottom:7px; background:var(--surface-2); width:100%; text-align:left; cursor:pointer; color:inherit; }
+.rel:hover { border-color:var(--line-strong); }
+.rel-bar { width:3px; align-self:stretch; border-radius:2px; background:var(--bar); flex:none; }
+.rel-main { min-width:0; flex:1; }
+.rel-name { font-size:12.5px; font-weight:500; }
+.rel-sub { font-size:10.5px; color:var(--muted); font-family:var(--font-mono); }
+.rel-right { display:flex; align-items:center; gap:6px; flex:none; }
+.rel-score { font-family:var(--font-mono); font-size:12px; font-weight:600; }
+
+.caveat { font-size:11px; color:var(--muted); line-height:1.55; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:9px 11px; margin-top:4px; }
+.empty { font-size:12.5px; color:var(--muted); margin:0 0 10px; }
+
+.btn { border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:9px 15px; border-radius:9px; cursor:pointer; font-size:13px; font-weight:500; }
+.btn:hover { border-color:var(--line-strong); }
+.btn-primary { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600; }
+.btn-primary:hover { filter:brightness(1.08); }
+.btn-block { width:100%; }
+.btn-sm { padding:6px 11px; font-size:12px; }
+
+/* profile chart */
+.profile { display:block; width:100%; height:120px; overflow:visible; }
+.profile text { font-family:var(--font-mono); fill:var(--muted); font-size:8.5px; }
+.profile .ax { stroke:var(--line); stroke-width:1; }
+.profile-note { font-size:10.5px; color:var(--muted); margin-top:3px; }
+
+/* report cards */
+.rep { border:1px solid var(--line); border-left:3px solid var(--bar,var(--line-strong)); border-radius:9px; padding:10px 11px; margin-bottom:8px; background:var(--surface-2); width:100%; text-align:left; cursor:pointer; color:inherit; display:block; }
+.rep:hover { border-color:var(--line-strong); }
+.rep-top { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.rep-cond { font-weight:600; font-size:12.5px; }
+.rep-when { font-family:var(--font-mono); font-size:10px; color:var(--muted); white-space:nowrap; }
+.rep-where { font-size:11px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:6px; }
+.rep-text { font-size:12.5px; color:var(--ink-soft); margin-top:5px; }
+.rep-by { font-family:var(--font-mono); font-size:10px; color:var(--muted); margin-top:5px; }
+
+.seg { display:flex; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:2px; margin:0 0 12px; }
+.seg button { flex:1; border:none; background:none; cursor:pointer; padding:6px 10px; border-radius:7px; font-size:12px; font-weight:500; color:var(--muted); }
+.seg button[aria-pressed="true"] { background:var(--surface); color:var(--ink); box-shadow:var(--shadow-sm); font-weight:600; }
+
+/* modal */
+.backdrop { position:fixed; inset:0; z-index:900; background:rgba(10,16,18,.5); display:flex; align-items:center; justify-content:center; padding:18px; animation:fade .15s ease; }
+@keyframes fade { from{opacity:0} }
+.modal { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; width:440px; max-width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,.35); position:relative; }
+.modal h2 { font-family:var(--font-display); font-size:18px; margin:0 0 4px; letter-spacing:-.01em; }
+.modal .m-sub { color:var(--muted); font-size:12.5px; margin:0 0 16px; }
+.x-btn { position:absolute; top:13px; right:13px; width:28px; height:28px; border-radius:50%; border:1px solid var(--line); background:var(--surface-2); color:var(--muted); cursor:pointer; font-size:15px; line-height:1; display:flex; align-items:center; justify-content:center; }
+.field { display:flex; flex-direction:column; gap:5px; margin-bottom:13px; }
+.field > label { font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); font-weight:500; }
+.field input, .field select, .field textarea { padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--ink); font-size:13.5px; width:100%; }
+.field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--accent); background:var(--surface); box-shadow:0 0 0 3px var(--accent-soft); }
+.field textarea { resize:vertical; min-height:70px; font-family:inherit; }
+.field input[type=range] { padding:0; background:none; border:none; accent-color:var(--accent); }
+.scope-opts { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.scope-opt { display:flex; gap:11px; align-items:flex-start; padding:11px 12px; border:1px solid var(--line); border-radius:11px; background:var(--surface-2); cursor:pointer; text-align:left; color:inherit; width:100%; }
+.scope-opt:hover { border-color:var(--line-strong); }
+.scope-opt[aria-pressed="true"] { border-color:var(--accent); background:var(--accent-soft); }
+.scope-ic { font-size:17px; flex:none; line-height:1.2; }
+.scope-t { font-size:13px; font-weight:600; display:block; }
+.scope-d { font-size:11.5px; color:var(--muted); display:block; margin-top:1px; }
+.hp { position:absolute !important; left:-9999px !important; width:1px; height:1px; overflow:hidden; }
+.form-note { font-size:11px; color:var(--muted); margin:10px 0 0; line-height:1.5; }
+.sev-out { font-family:var(--font-mono); font-weight:600; color:var(--ink); }
+
+/* advisory inside panels */
+.advisory { display:flex; gap:10px; align-items:flex-start; padding:11px 12px; background:var(--warn-bg); border:1px solid var(--warn-line); border-radius:11px; color:var(--warn-ink); font-size:11.5px; line-height:1.5; margin:0 0 14px; }
+.advisory svg { flex:none; margin-top:1px; }
+
+.toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--ink); color:var(--ground); padding:11px 19px; border-radius:11px; font-size:13px; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,.35); max-width:90vw; animation:rise .2s ease; }
+@keyframes rise { from{opacity:0; transform:translate(-50%,8px)} }
+
+.table-wrap { overflow-x:auto; }
+table.reg { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.reg th { text-align:left; font-family:var(--font-display); font-size:9.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer; position:sticky; top:0; background:var(--surface); }
+table.reg td { padding:7px 10px; border-bottom:1px solid var(--line); }
+table.reg tbody tr { cursor:pointer; }
+table.reg tbody tr:hover { background:var(--surface-2); }
+.num { font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+/* mobile: panel becomes a bottom sheet */
+@media (max-width: 720px) {
+  #search-wrap { left:8px; right:8px; top:8px; width:auto; }
+  .brand .brand-sub { display:none; }
+  #status-chip { display:none; }
+  #legend { display:none; }
+  #panel {
+    top:auto; left:0; right:0; bottom:0; width:auto; max-width:none; height:66vh;
+    border-radius:18px 18px 0 0; transform:translateY(calc(100% + 16px));
+  }
+  #panel.open { transform:none; }
+  #fabs { bottom:10px; right:10px; }
+  body.panel-open #fabs { bottom:calc(66vh + 10px); }
+}
+@media (prefers-reduced-motion: reduce) { * { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+</style>
+
+<div id="map"></div>
+
+<div class="ui card" id="search-wrap">
+  <div class="searchbar">
+    <span class="brand" title="NILA, the Nepal Ice Lake Atlas"><span class="mk">🏔️</span><span class="bt"><b>NILA</b><i class="brand-sub">Nepal Ice Lake Atlas</i></span></span>
+    <input id="q" type="search" placeholder="Search lakes, villages, districts" aria-label="Search" autocomplete="off">
+    <button class="icon-btn" id="btn-info" title="About this map" aria-label="About">i</button>
+  </div>
+  <div id="results" role="listbox"></div>
+</div>
+
+<div class="ui card" id="status-chip">
+  <span class="live-dot" id="live-dot"></span>
+  <span class="txt" id="live-text">Checking live data…</span>
+</div>
+
+<aside class="ui card" id="panel" aria-live="polite">
+  <div class="panel-head">
+    <h2 class="panel-title" id="panel-title">Detail</h2>
+    <button class="icon-btn" id="panel-close" aria-label="Close panel">✕</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</aside>
+
+<div class="ui" id="fabs">
+  <button class="fab fab-wide" id="fab-report"><span>＋</span> Report</button>
+  <div class="fab-group">
+    <button class="fab" id="fab-feed" title="All reports" aria-label="All reports">☰</button>
+    <button class="fab" id="fab-list" title="Risk list" aria-label="Risk list">▦</button>
+    <button class="fab" id="fab-layers" title="Layers" aria-label="Layers">◧</button>
+  </div>
+  <div class="fab-group">
+    <button class="fab" id="fab-in" title="Zoom in" aria-label="Zoom in">＋</button>
+    <button class="fab" id="fab-out" title="Zoom out" aria-label="Zoom out">−</button>
+    <button class="fab" id="fab-reset" title="Reset view" aria-label="Reset view">⤾</button>
+  </div>
+</div>
+
+<div class="ui card" id="legend">
+  <div class="lg-head" id="lg-head"><span class="lg-t">Risk level</span><span class="icon-btn" style="width:18px;height:18px">▾</span></div>
+  <div class="lg-body">
+    <div class="lg-row"><span class="lg-dot" style="background:var(--r-very_high)"></span>Very high · 75+</div>
+    <div class="lg-row"><span class="lg-dot" style="background:var(--r-high)"></span>High · 50–74</div>
+    <div class="lg-row"><span class="lg-dot" style="background:var(--r-medium)"></span>Medium · 25–49</div>
+    <div class="lg-row"><span class="lg-dot" style="background:var(--r-low)"></span>Low · under 25</div>
+    <div class="lg-row" style="margin-top:6px"><span class="lg-sq"></span>Village or town</div>
+    <div class="lg-row"><span class="lg-ring"></span>Past outburst flood</div>
+  </div>
+</div>
+
+<div class="ui card" id="pickbar">
+  <span id="pick-text">Click the map where you saw it</span>
+  <button id="pick-cancel">Cancel</button>
+</div>
+
+<script>__LEAFLET_JS__</script>
+<script>__CLUSTER_JS__</script>
+<script>
+(function () {
+  "use strict";
+
+  var RAW_LAKES = __LAKES__;
+  var GEO       = __GEO__;
+  var META      = __META__;
+  var PLACEDATA = __PLACES__;
+  var EVENTS    = __EVENTS__;
+  var DISTRICTS = __DISTRICTS__;
+
+  var PLACES = PLACEDATA.places;
+  var BASIN_PARENT = PLACEDATA.basin_parents;
+
+  var LEVEL_LABEL = { low:"Low", medium:"Medium", high:"High", very_high:"Very high", unknown:"Not scored" };
+  var LEVEL_RANK  = { low:1, medium:2, high:3, very_high:4, unknown:0 };
+  var COND_LABEL = {
+    normal:"No change observed", rising_water:"Rising water level", new_cracks:"New cracks in the dam",
+    seepage:"Water seeping through the dam", debris:"Debris or landslide near the lake",
+    noise:"Unusual noise or rumbling", other:"Something else"
+  };
+  var HIGH_SIGNAL = { rising_water:1, new_cracks:1, seepage:1 };
+  var FACTOR_LABEL = {
+    area_change:"Lake-area change", seismicity:"Nearby earthquakes", climate:"Rain & temperature",
+    dam_type:"Dam type", slope:"Slope steepness", user_reports:"Field reports"
+  };
+  var WEIGHTS = { area_change:30, seismicity:20, climate:20, dam_type:15, slope:10, user_reports:5 };
+  var FACTOR_ORDER = ["area_change","seismicity","climate","dam_type","slope","user_reports"];
+  var DAM_RISK = { moraine:1.0, ice:0.75, bedrock:0.15, unknown:0.5 };
+  var NEAR_KM = 25;   // how close a point report must be to count as "near" a site
+
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c];
+    });
+  }
+  function clamp(x, lo, hi) { return Math.max(lo == null ? 0 : lo, Math.min(hi == null ? 1 : hi, x)); }
+  function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888"; }
+  function colorOf(l) { return cssVar("--r-" + (l || "unknown")); }
+  function sevMeter(level, color) {
+    var n = LEVEL_RANK[level] || 0, bars = "";
+    for (var i = 1; i <= 4; i++) bars += '<i class="' + (i <= n ? "on" : "") + '"></i>';
+    return '<span class="sev" style="color:' + (color || colorOf(level)) + '" aria-hidden="true">' + bars + "</span>";
+  }
+  function sevBars(n) {
+    var bars = "";
+    for (var i = 1; i <= 5; i++) bars += '<i class="' + (i <= n ? "on" : "") + '"></i>';
+    return '<span class="sev" aria-hidden="true">' + bars + "</span>";
+  }
+  function ago(iso) {
+    var s = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (s < 90) return "just now";
+    if (s < 3600) return Math.round(s/60) + "m ago";
+    if (s < 86400) return Math.round(s/3600) + "h ago";
+    if (s < 2592000) return Math.round(s/86400) + "d ago";
+    return new Date(iso).toLocaleDateString();
+  }
+  function haversineKm(a, b) {
+    var R = 6371, t = Math.PI/180;
+    var dLat = (b.lat - a.lat)*t, dLon = (b.lon - a.lon)*t;
+    var h = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+
+  /* ---------- scoring: mirrors the Python engine ---------- */
+  function scoreArea(p) { return p == null ? 0.3 : clamp(p/15); }
+  function scoreSeis(s) { return (!s || !s.available) ? 0 : clamp(Math.max(clamp((s.count||0)/5), s.maxMag ? clamp((s.maxMag-4)/2.5) : 0)); }
+  function scoreClimate(c) { return (!c || !c.available) ? 0 : clamp(0.6*clamp((c.precipAnomPct||0)/60) + 0.4*clamp((c.tempAnomC||0)/3)); }
+  function scoreDam(t) { var k=(t||"unknown").toLowerCase(); return DAM_RISK[k] != null ? DAM_RISK[k] : 0.5; }
+  function scoreSlope(d) { return d == null ? 0.3 : clamp(d/35); }
+  function scoreReports(list) {
+    if (!list || !list.length) return 0;
+    var t = 0;
+    list.forEach(function (r) { var b = (r.severity||1)/5; if (HIGH_SIGNAL[r.condition]) b *= 1.3; t += b; });
+    return clamp(t/3);
+  }
+  function levelFor(s) { return s >= 75 ? "very_high" : s >= 50 ? "high" : s >= 25 ? "medium" : "low"; }
+
+  var live = { seis:{}, clim:{}, state:"idle", at:null };
+  var LAKES = RAW_LAKES.map(function (l) { var c={}; for (var k in l) c[k]=l[k]; return c; });
+  LAKES.forEach(function (l) { l.events = EVENTS.filter(function (e) { return e.lake && e.lake === l.name; }); });
+
+  /* ---------- reports: server when available, this browser otherwise ---------- */
+  var REPORTS = [];
+  var reportMode = "local";   // "server" once the API answers
+  var STORE = "nila.reports.v3";
+  var STORE_LEGACY = "glofwatch.reports.v3";   // pre-rename key, read once so nothing is lost
+  function loadLocal() {
+    try {
+      var raw = localStorage.getItem(STORE);
+      if (raw == null) {
+        var old = localStorage.getItem(STORE_LEGACY);
+        if (old != null) { localStorage.setItem(STORE, old); raw = old; }
+      }
+      return JSON.parse(raw || "[]") || [];
+    } catch (e) { return []; }
+  }
+  function saveLocal(a) { try { localStorage.setItem(STORE, JSON.stringify(a.slice(0,400))); return true; } catch (e) { return false; } }
+
+  function reportsForLake(l) {
+    return REPORTS.filter(function (r) {
+      if (r.target_kind === "lake" && String(r.target_id) === String(l.id)) return true;
+      if (r.district && l.district && r.district === l.district) return true;
+      if (r.lat != null && r.lon != null) return haversineKm(l, r) <= NEAR_KM;
+      return false;
+    });
+  }
+  function reportsForPlace(p) {
+    return REPORTS.filter(function (r) {
+      if (r.target_kind === "place" && String(r.target_id) === String(p.id)) return true;
+      if (r.district && p.district && r.district === p.district) return true;
+      if (r.lat != null && r.lon != null) return haversineKm(p, r) <= NEAR_KM;
+      return false;
+    });
+  }
+
+  function recompute() {
+    LAKES.forEach(function (l) {
+      var mine = reportsForLake(l);
+      var norm = {
+        area_change: scoreArea(l.area_change_pct),
+        seismicity: scoreSeis(live.seis[l.id]),
+        climate: scoreClimate(live.clim[l.id]),
+        dam_type: scoreDam(l.dam_type),
+        slope: scoreSlope(l.slope_deg),
+        user_reports: scoreReports(mine)
+      };
+      var total = 0, factors = {};
+      FACTOR_ORDER.forEach(function (k) {
+        var pts = norm[k]*WEIGHTS[k]; total += pts;
+        factors[k] = { weight_pct:WEIGHTS[k], normalized_0_1:norm[k], contribution_points:pts };
+      });
+      l.score = Math.round(clamp(total/100)*1000)/10;
+      l.level = levelFor(l.score);
+      l.factors = factors;
+      l.reportCount = mine.length;
+      l.liveSeis = live.seis[l.id];
+      l.liveClim = live.clim[l.id];
+    });
+  }
+
+  /* ---------- basin relationships ---------- */
+  function basinsOf(l) { var b=[l.basin]; if (BASIN_PARENT[l.basin]) b.push(BASIN_PARENT[l.basin]); return b; }
+  function shares(l, p) { return p.basins.length && basinsOf(l).some(function (b) { return p.basins.indexOf(b) !== -1; }); }
+  function placesBelow(l) {
+    return PLACES.filter(function (p) { return shares(l,p) && (l.elevation_m||0) > (p.elevation_m||0); })
+      .map(function (p) { return { place:p, km:haversineKm(l,p), drop:(l.elevation_m||0)-(p.elevation_m||0) }; })
+      .sort(function (a,b) { return a.km-b.km; });
+  }
+  function lakesAbove(p) {
+    return LAKES.filter(function (l) { return shares(l,p) && (l.elevation_m||0) > (p.elevation_m||0); })
+      .map(function (l) { return { lake:l, km:haversineKm(l,p), drop:(l.elevation_m||0)-(p.elevation_m||0) }; })
+      .sort(function (a,b) { return a.km-b.km; });
+  }
+
+  /* ============================================================
+     MAP
+     ============================================================ */
+  var NEPAL = [28.25, 84.3];
+  var map = L.map("map", { zoomControl:false, attributionControl:true, minZoom:6, maxZoom:17 })
+    .setView(NEPAL, 7);
+
+  var bases = {
+    Terrain: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+      { maxZoom:17, attribution:"Tiles &copy; Esri" }),
+    Satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      { maxZoom:17, attribution:"Tiles &copy; Esri, Maxar, Earthstar Geographics" }),
+    Streets: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+      { maxZoom:17, attribution:"Tiles &copy; Esri" })
+  };
+  var baseNames = ["Terrain","Satellite","Streets"];
+  var baseIdx = 0;
+  bases.Terrain.addTo(map);
+
+  // If a basemap stops working (a provider changing terms, a blocked network),
+  // drop back to Terrain rather than leaving a broken grid on screen. Note this
+  // only catches outright failures: a provider that still serves a watermarked
+  // tile returns HTTP 200 and looks fine to the browser.
+  baseNames.forEach(function (name) {
+    var fails = 0;
+    bases[name].on("tileerror", function () {
+      fails++;
+      if (fails === 6 && baseNames[baseIdx] === name && name !== "Terrain") {
+        map.removeLayer(bases[name]);
+        baseIdx = 0;
+        bases.Terrain.addTo(map);
+        bases.Terrain.bringToBack();
+        toast("The " + name + " basemap is not loading, switched back to Terrain.");
+      }
+    });
+  });
+
+  // Vector outline of Nepal. Drawn regardless of tiles, so there is always a
+  // map even offline or where tile hosts are blocked.
+  L.geoJSON(GEO, {
+    style: function (f) {
+      var np = f.properties.name === "Nepal";
+      return { color: np ? cssVar("--land-edge") : cssVar("--line-strong"),
+               weight: np ? 1.6 : 0.7, opacity: np ? 0.95 : 0.4,
+               fillColor: cssVar("--land"), fillOpacity: np ? 0.10 : 0.04, interactive:false };
+    }
+  }).addTo(map);
+
+  var lakeCluster = L.markerClusterGroup({
+    maxClusterRadius:44, disableClusteringAtZoom:11, spiderfyOnMaxZoom:true, showCoverageOnHover:false,
+    iconCreateFunction: function (c) {
+      var worst = c.getAllChildMarkers().reduce(function (a,m) {
+        return (LEVEL_RANK[m.options.lvl]||0) > (LEVEL_RANK[a]||0) ? m.options.lvl : a; }, "low");
+      return L.divIcon({ className:"", iconSize:[36,36],
+        html:'<div class="cluster-pin" style="background:'+colorOf(worst)+'">'+c.getChildCount()+"</div>" });
+    }
+  });
+  var placeCluster = L.markerClusterGroup({
+    maxClusterRadius:46, disableClusteringAtZoom:12, showCoverageOnHover:false,
+    iconCreateFunction: function (c) {
+      return L.divIcon({ className:"", iconSize:[36,36],
+        html:'<div class="cluster-pin places">'+c.getChildCount()+"</div>" });
+    }
+  });
+  var eventLayer = L.layerGroup();
+  var reportLayer = L.layerGroup();
+  map.addLayer(lakeCluster); map.addLayer(placeCluster); map.addLayer(eventLayer); map.addLayer(reportLayer);
+
+  var lakeMarkers = {}, placeMarkers = {};
+  var maxArea = Math.max.apply(null, LAKES.map(function (l) { return l.area_km2 || 0.01; }));
+
+  function lakeRadius(l) { return 6 + Math.sqrt((l.area_km2||0.01)/maxArea) * 9; }
+
+  function buildLakeMarkers() {
+    lakeCluster.clearLayers(); lakeMarkers = {};
+    LAKES.forEach(function (l) {
+      var m = L.circleMarker([l.lat, l.lon], {
+        radius: lakeRadius(l), color:"#fff", weight:2, opacity:1,
+        fillColor: colorOf(l.level), fillOpacity:.95, lvl:l.level
+      });
+      m.bindTooltip(l.name + " · " + l.score.toFixed(1), { direction:"top", offset:[0,-4] });
+      m.on("click", function () { selectLake(l.id); });
+      lakeMarkers[l.id] = m;
+      lakeCluster.addLayer(m);
+    });
+  }
+  function buildPlaceMarkers() {
+    placeCluster.clearLayers(); placeMarkers = {};
+    PLACES.forEach(function (p) {
+      var m = L.marker([p.lat, p.lon], {
+        icon: L.divIcon({ className:"mk-place", html:"<i></i>", iconSize:[13,13], iconAnchor:[6,6] })
+      });
+      m.bindTooltip(p.name, { direction:"top", offset:[0,-6] });
+      m.on("click", function () { selectPlace(p.id); });
+      placeMarkers[p.id] = m;
+      placeCluster.addLayer(m);
+    });
+  }
+  function buildEventMarkers() {
+    eventLayer.clearLayers();
+    EVENTS.forEach(function (ev) {
+      var m = L.marker([ev.lat, ev.lon], {
+        icon: L.divIcon({ className:"mk-event", html:"<i></i>", iconSize:[19,19], iconAnchor:[9,9] })
+      });
+      m.bindTooltip(ev.name + " · " + ev.date.slice(0,4), { direction:"top", offset:[0,-8] });
+      m.on("click", function () { selectEvent(ev.id); });
+      eventLayer.addLayer(m);
+    });
+  }
+  function buildReportMarkers() {
+    reportLayer.clearLayers();
+    REPORTS.forEach(function (r) {
+      if (r.lat == null || r.lon == null) return;
+      var col = r.severity >= 4 ? cssVar("--r-very_high") : r.severity >= 3 ? cssVar("--r-high") : cssVar("--r-medium");
+      var m = L.marker([r.lat, r.lon], {
+        icon: L.divIcon({ className:"mk-report", html:'<i style="background:'+col+'"></i>', iconSize:[18,18], iconAnchor:[9,9] })
+      });
+      m.bindTooltip((COND_LABEL[r.condition]||r.condition) + " · " + ago(r.created_at), { direction:"top", offset:[0,-8] });
+      m.on("click", function () { openFeed(r.id); });
+      reportLayer.addLayer(m);
+    });
+  }
+
+  // Pan so the target is not hidden under the side panel.
+  function focusOn(lat, lon, zoom) {
+    var z = zoom || Math.max(map.getZoom(), 11);
+    var pt = map.project([lat, lon], z);
+    if (panelOpen() && window.innerWidth > 720) pt = pt.subtract([188, 0]);
+    map.flyTo(map.unproject(pt, z), z, { duration:.7 });
+  }
+
+  /* ============================================================
+     Panel
+     ============================================================ */
+  var panel = $("#panel"), panelBody = $("#panel-body"), panelTitle = $("#panel-title");
+  var sel = { kind:null, id:null };
+  function panelOpen() { return panel.classList.contains("open"); }
+  function openPanel(title) {
+    panelTitle.textContent = title;
+    panel.classList.add("open");
+    document.body.classList.add("panel-open");
+    panelBody.scrollTop = 0;
+  }
+  function closePanel() {
+    panel.classList.remove("open");
+    document.body.classList.remove("panel-open");
+    sel = { kind:null, id:null };
+    paintSelection();
+  }
+  $("#panel-close").addEventListener("click", closePanel);
+
+  function paintSelection() {
+    LAKES.forEach(function (l) {
+      var m = lakeMarkers[l.id]; if (!m) return;
+      var on = sel.kind === "lake" && String(sel.id) === String(l.id);
+      m.setStyle({ fillColor:colorOf(l.level), color: on ? cssVar("--ink") : "#fff", weight: on ? 3.5 : 2, radius: lakeRadius(l) + (on?2:0) });
+    });
+    PLACES.forEach(function (p) {
+      var m = placeMarkers[p.id]; if (!m || !m._icon) return;
+      m._icon.classList.toggle("on", sel.kind === "place" && sel.id === p.id);
+    });
+  }
+
+  function factorRow(k, f, l) {
+    var flag = "", why = "";
+    if (k === "seismicity") {
+      var s = l.liveSeis;
+      if (s && s.available) { flag='<span class="f-flag live">live</span>';
+        why = s.count + " quake" + (s.count===1?"":"s") + " of M3+ within 100 km in the last 90 days" + (s.maxMag ? ", strongest M"+s.maxMag.toFixed(1) : ""); }
+      else { flag='<span class="f-flag none">no data</span>'; why="USGS catalogue unreachable, counted as zero."; }
+    } else if (k === "climate") {
+      var c = l.liveClim;
+      if (c && c.available) { flag='<span class="f-flag live">live</span>';
+        why = "Rain " + (c.precipAnomPct>=0?"+":"") + c.precipAnomPct.toFixed(0) + "% and temperature " + (c.tempAnomC>=0?"+":"") + c.tempAnomC.toFixed(1) + "°C against the same 30 days five years ago"; }
+      else { flag='<span class="f-flag none">no data</span>'; why="Open-Meteo unreachable, counted as zero."; }
+    } else if (k === "area_change") {
+      flag='<span class="f-flag">inventory</span>';
+      why = l.area_change_pct != null ? "Surface area trend of " + (l.area_change_pct>=0?"+":"") + l.area_change_pct.toFixed(1) + "% from stored history" : "No area history stored.";
+    } else if (k === "dam_type") {
+      why = (l.dam_type||"unknown").charAt(0).toUpperCase() + (l.dam_type||"unknown").slice(1) + " dam. Moraine dams are the least stable, bedrock the most.";
+    } else if (k === "slope") {
+      why = l.slope_deg != null ? l.slope_deg.toFixed(0) + "° surrounding slope." : "";
+    } else if (k === "user_reports") {
+      why = l.reportCount ? l.reportCount + " community report" + (l.reportCount===1?"":"s") + " near here" : "No community reports near here yet.";
+    }
+    return '<div class="factor"><div class="f-top"><span class="f-name">' + esc(FACTOR_LABEL[k]) + flag +
+      '</span><span class="f-pts">' + f.contribution_points.toFixed(1) + " / " + f.weight_pct + "</span></div>" +
+      '<div class="f-track"><div class="f-fill" style="width:' + Math.round(f.normalized_0_1*100) + "%;background:" + colorOf(l.level) + '"></div></div>' +
+      (why ? '<div class="f-why">' + esc(why) + "</div>" : "") + "</div>";
+  }
+
+  function elevationProfile(l) {
+    var below = placesBelow(l).slice(0,6);
+    if (!below.length) return "";
+    var pts = [{ name:l.name, km:0, m:l.elevation_m, lake:true }]
+      .concat(below.map(function (d) { return { name:d.place.name, km:d.km, m:d.place.elevation_m }; }));
+    var W=336,H=112,PL=32,PR=10,PT=10,PB=20;
+    var maxKm = Math.max.apply(null, pts.map(function(p){return p.km;})) || 1;
+    var maxM = Math.max.apply(null, pts.map(function(p){return p.m;}));
+    var minM = Math.min.apply(null, pts.map(function(p){return p.m;}));
+    var span = Math.max(maxM-minM, 100);
+    var X = function (km) { return PL + (km/maxKm)*(W-PL-PR); };
+    var Y = function (m) { return PT + (1-(m-minM)/span)*(H-PT-PB); };
+    var line = pts.map(function (p,i) { return (i?"L":"M") + X(p.km).toFixed(1) + " " + Y(p.m).toFixed(1); }).join(" ");
+    var area = line + " L" + X(pts[pts.length-1].km).toFixed(1) + " " + (H-PB) + " L" + X(0).toFixed(1) + " " + (H-PB) + " Z";
+    var dots = pts.map(function (p) {
+      return '<circle cx="'+X(p.km).toFixed(1)+'" cy="'+Y(p.m).toFixed(1)+'" r="'+(p.lake?4.5:3.2)+'" fill="'+
+        (p.lake?colorOf(l.level):cssVar("--place"))+'" stroke="var(--surface)" stroke-width="2"><title>'+
+        esc(p.name)+" — "+p.m.toLocaleString()+" m, "+p.km.toFixed(1)+" km</title></circle>";
+    }).join("");
+    var last = pts[pts.length-1];
+    return '<svg class="profile" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Elevation from '+esc(l.name)+' down to '+esc(last.name)+'">'+
+      '<line class="ax" x1="'+PL+'" y1="'+(H-PB)+'" x2="'+(W-PR)+'" y2="'+(H-PB)+'"/>'+
+      '<path d="'+area+'" fill="'+colorOf(l.level)+'" opacity=".10"/>'+
+      '<path d="'+line+'" fill="none" stroke="'+colorOf(l.level)+'" stroke-width="2" stroke-linejoin="round"/>'+dots+
+      '<text x="'+X(0).toFixed(1)+'" y="'+(Y(pts[0].m)-8).toFixed(1)+'" text-anchor="start">'+esc(pts[0].name)+"</text>"+
+      '<text x="'+X(last.km).toFixed(1)+'" y="'+(Y(last.m)+13).toFixed(1)+'" text-anchor="end">'+esc(last.name)+"</text>"+
+      '<text x="'+PL+'" y="'+(H-5)+'" text-anchor="start">0 km</text>'+
+      '<text x="'+(W-PR)+'" y="'+(H-5)+'" text-anchor="end">'+maxKm.toFixed(0)+' km</text>'+
+      '<text x="1" y="'+(Y(maxM)+3).toFixed(1)+'">'+maxM.toLocaleString()+"</text>"+
+      '<text x="1" y="'+(Y(minM)+3).toFixed(1)+'">'+minM.toLocaleString()+"</text></svg>"+
+      '<div class="profile-note">Elevation against straight-line distance. Not a flood path.</div>';
+  }
+
+  function reportCard(r) {
+    var col = r.severity >= 4 ? cssVar("--r-very_high") : r.severity >= 3 ? cssVar("--r-high") : cssVar("--r-medium");
+    var where = r.target_name ? r.target_name : (r.district ? r.district + " district" :
+      (r.lat != null ? r.lat.toFixed(3)+", "+r.lon.toFixed(3) : "unspecified"));
+    return '<button class="rep" data-report="'+esc(r.id)+'" style="--bar:'+col+'">'+
+      '<div class="rep-top"><span class="rep-cond">'+esc(COND_LABEL[r.condition]||r.condition)+"</span>"+
+      '<span class="rep-when">'+esc(ago(r.created_at))+"</span></div>"+
+      '<div class="rep-where"><span style="color:'+col+'">'+sevBars(r.severity)+"</span>"+esc(where)+"</div>"+
+      (r.body ? '<div class="rep-text">'+esc(r.body)+"</div>" : "")+
+      '<div class="rep-by">'+esc(r.reporter || "Anonymous")+"</div></button>";
+  }
+  function wireReportCards(host) {
+    host.querySelectorAll("[data-report]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var r = REPORTS.filter(function (x) { return String(x.id) === b.dataset.report; })[0];
+        if (r && r.lat != null) focusOn(r.lat, r.lon, 12);
+      });
+    });
+  }
+
+  function selectLake(id, opts) {
+    opts = opts || {};
+    var l = LAKES.filter(function (x) { return String(x.id) === String(id); })[0];
+    if (!l) return;
+    sel = { kind:"lake", id:l.id };
+    var below = placesBelow(l), mine = reportsForLake(l);
+    var growth = l.area_1990_km2 ? ((l.area_km2-l.area_1990_km2)/l.area_1990_km2*100) : null;
+
+    panelBody.innerHTML =
+      '<div class="detail-body">'+
+      '<h3 class="detail-name">'+esc(l.name)+"</h3>"+
+      '<p class="detail-loc">'+esc(l.district)+" district · "+esc(l.basin)+" basin · "+(l.elevation_m||0).toLocaleString()+" m</p>"+
+      '<div class="detail-tags"><span class="chip">'+esc(l.dam_type)+" dam</span>"+
+        (l.events.length ? '<span class="chip hist">'+l.events.length+" past flood"+(l.events.length===1?"":"s")+"</span>" : "")+
+        (below.length ? '<span class="chip">'+below.length+" places below</span>" : "")+"</div>"+
+      '<div class="score-box"><div class="score-top">'+
+        '<span class="score-n">'+l.score.toFixed(1)+"<span> / 100</span></span>"+
+        '<span class="pill" style="background:var(--r-'+l.level+'-bg);color:'+colorOf(l.level)+'">'+sevMeter(l.level)+esc(LEVEL_LABEL[l.level])+"</span></div>"+
+        '<div class="ramp"><div class="ramp-mark" style="left:'+clamp(l.score,0,100)+'%"></div></div>'+
+        '<div class="ramp-scale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div></div>'+
+      '<dl class="facts">'+
+        "<div><dt>Surface area</dt><dd>"+(l.area_km2==null?"—":l.area_km2.toFixed(2))+" km²</dd></div>"+
+        "<div><dt>Area in 1990</dt><dd>"+(l.area_1990_km2==null?"—":l.area_1990_km2.toFixed(2))+" km²</dd></div>"+
+        "<div><dt>Growth since</dt><dd>"+(growth==null?"—":(growth>=0?"+":"")+growth.toFixed(0)+"%")+"</dd></div>"+
+        "<div><dt>Slope</dt><dd>"+(l.slope_deg==null?"—":l.slope_deg.toFixed(0))+"°</dd></div>"+
+      "</dl>"+
+      '<button class="btn btn-primary btn-block" data-report-here="lake:'+l.id+'">Report on this lake</button>'+
+      (l.events.length ? '<div class="sec-h" style="margin-top:18px">Past outburst floods <span class="sec-n">'+l.events.length+"</span></div>"+
+        l.events.map(function (e) {
+          return '<button class="rel" data-event="'+e.id+'" style="--bar:var(--r-very_high)"><span class="rel-bar"></span>'+
+            '<span class="rel-main"><span class="rel-name">'+esc(e.name)+"</span><br>"+
+            '<span class="rel-sub">'+esc(e.date)+"</span></span></button>"; }).join("") : "")+
+      '<div class="sec-h" style="margin-top:18px">Community reports near here <span class="sec-n">'+mine.length+"</span></div>"+
+      (mine.length ? mine.slice(0,8).map(reportCard).join("") : '<p class="empty">Nothing reported near here yet.</p>')+
+      '<div class="sec-h" style="margin-top:18px">Score breakdown <span class="sec-n">points of 100</span></div>'+
+      FACTOR_ORDER.map(function (k) { return factorRow(k, l.factors[k], l); }).join("")+
+      (below.length ? '<div class="sec-h" style="margin-top:18px">Downstream profile</div>'+elevationProfile(l)+
+        '<div class="sec-h" style="margin-top:14px">Places lower in this basin <span class="sec-n">'+below.length+"</span></div>"+
+        below.slice(0,6).map(function (d) {
+          return '<button class="rel" data-place="'+d.place.id+'" style="--bar:var(--place)"><span class="rel-bar"></span>'+
+            '<span class="rel-main"><span class="rel-name">'+esc(d.place.name)+"</span><br>"+
+            '<span class="rel-sub">'+d.km.toFixed(0)+" km · "+d.drop.toLocaleString()+" m below</span></span></button>"; }).join("")+
+        '<div class="caveat">Same river basin and lower down. Not a modelled flood path, arrival time or depth.</div>' : "")+
+      "</div>";
+
+    openPanel("Lake");
+    wirePanel();
+    paintSelection();
+    if (!opts.noFly) focusOn(l.lat, l.lon, Math.max(map.getZoom(), 11));
+    setHash("lake", l.id);
+  }
+
+  function selectPlace(id, opts) {
+    opts = opts || {};
+    var p = PLACES.filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    sel = { kind:"place", id:p.id };
+    var up = lakesAbove(p), mine = reportsForPlace(p);
+    var worst = up.reduce(function (a,d) { return !a || d.lake.score > a.lake.score ? d : a; }, null);
+
+    panelBody.innerHTML =
+      '<div class="detail-body">'+
+      '<h3 class="detail-name">'+esc(p.name)+"</h3>"+
+      '<p class="detail-loc">'+esc(p.district)+" district"+(p.basins.length?" · "+esc(p.basins.join(" / "))+" basin":"")+" · "+(p.elevation_m||0).toLocaleString()+" m</p>"+
+      '<p class="f-why" style="margin:0 0 13px">'+esc(p.note)+"</p>"+
+      (worst ? '<div class="score-box"><div class="score-top"><span class="score-n">'+worst.lake.score.toFixed(1)+"<span> / 100</span></span>"+
+        '<span class="pill" style="background:var(--r-'+worst.lake.level+'-bg);color:'+colorOf(worst.lake.level)+'">'+sevMeter(worst.lake.level)+esc(LEVEL_LABEL[worst.lake.level])+"</span></div>"+
+        '<div class="ramp"><div class="ramp-mark" style="left:'+clamp(worst.lake.score,0,100)+'%"></div></div>'+
+        '<div class="ramp-scale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>'+
+        '<div class="f-why" style="margin-top:8px">Highest-scoring lake upstream: <b>'+esc(worst.lake.name)+"</b></div></div>" : "")+
+      '<button class="btn btn-primary btn-block" data-report-here="place:'+p.id+'">Report on this place</button>'+
+      '<div class="sec-h" style="margin-top:18px">Community reports near here <span class="sec-n">'+mine.length+"</span></div>"+
+      (mine.length ? mine.slice(0,8).map(reportCard).join("") : '<p class="empty">Nothing reported near here yet.</p>')+
+      '<div class="sec-h" style="margin-top:18px">Lakes upstream in the same basin <span class="sec-n">'+up.length+"</span></div>"+
+      (up.length ? up.map(function (d) {
+          return '<button class="rel" data-lake="'+d.lake.id+'" style="--bar:'+colorOf(d.lake.level)+'"><span class="rel-bar"></span>'+
+            '<span class="rel-main"><span class="rel-name">'+esc(d.lake.name)+"</span><br>"+
+            '<span class="rel-sub">'+d.km.toFixed(0)+" km · "+d.drop.toLocaleString()+" m higher</span></span>"+
+            '<span class="rel-right">'+sevMeter(d.lake.level)+'<span class="rel-score" style="color:'+colorOf(d.lake.level)+'">'+d.lake.score.toFixed(1)+"</span></span></button>"; }).join("")+
+          '<div class="caveat">Shares a river basin and sits higher up. River-system geometry, not a modelled flood path.</div>'
+        : '<div class="caveat">'+(p.basins.length ? "No monitored lake sits higher in this basin." : "Not downstream of any lake in this inventory.")+"</div>")+
+      "</div>";
+
+    openPanel("Place");
+    wirePanel();
+    paintSelection();
+    if (!opts.noFly) focusOn(p.lat, p.lon, Math.max(map.getZoom(), 11));
+    setHash("place", p.id);
+  }
+
+  function selectEvent(id) {
+    var e = EVENTS.filter(function (x) { return x.id === id; })[0];
+    if (!e) return;
+    sel = { kind:"event", id:e.id };
+    var lake = LAKES.filter(function (l) { return l.name === e.lake; })[0];
+    panelBody.innerHTML =
+      '<div class="detail-body">'+
+      '<h3 class="detail-name">'+esc(e.name)+"</h3>"+
+      '<p class="detail-loc">'+esc(e.basin)+" basin"+(e.lake?" · source lake "+esc(e.lake):"")+"</p>"+
+      '<div class="detail-tags"><span class="chip hist">'+esc(e.date)+'</span><span class="chip">'+esc(e.confidence)+"</span></div>"+
+      '<p style="font-size:13px;line-height:1.6;margin:0 0 15px">'+esc(e.summary)+"</p>"+
+      (lake ? '<div class="sec-h">The source lake today</div><button class="rel" data-lake="'+lake.id+'" style="--bar:'+colorOf(lake.level)+'">'+
+        '<span class="rel-bar"></span><span class="rel-main"><span class="rel-name">'+esc(lake.name)+"</span><br>"+
+        '<span class="rel-sub">'+(lake.area_km2||0).toFixed(2)+" km² · "+(lake.elevation_m||0).toLocaleString()+" m</span></span>"+
+        '<span class="rel-right">'+sevMeter(lake.level)+'<span class="rel-score" style="color:'+colorOf(lake.level)+'">'+lake.score.toFixed(1)+"</span></span></button>"
+        : '<div class="caveat">No lake in this inventory is listed as the source.</div>')+
+      '<div class="caveat" style="margin-top:12px">Dates and impacts come from published GLOF literature and vary between sources. Coordinates are approximate.</div>'+
+      "</div>";
+    openPanel("Past flood");
+    wirePanel();
+    focusOn(e.lat, e.lon, Math.max(map.getZoom(), 10));
+    setHash("event", e.id);
+  }
+
+  function wirePanel() {
+    panelBody.querySelectorAll("[data-lake]").forEach(function (b) { b.addEventListener("click", function(){ selectLake(b.dataset.lake); }); });
+    panelBody.querySelectorAll("[data-place]").forEach(function (b) { b.addEventListener("click", function(){ selectPlace(b.dataset.place); }); });
+    panelBody.querySelectorAll("[data-event]").forEach(function (b) { b.addEventListener("click", function(){ selectEvent(b.dataset.event); }); });
+    panelBody.querySelectorAll("[data-report-here]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var parts = b.dataset.reportHere.split(":");
+        openReportModal({ kind: parts[0], id: parts[1] });
+      });
+    });
+    wireReportCards(panelBody);
+  }
+
+  /* ---------- reports feed ---------- */
+  var feedFilter = "all";
+  function openFeed(highlightId) {
+    var near = null, label = "";
+    if (sel.kind === "lake") { var l = LAKES.filter(function(x){return String(x.id)===String(sel.id);})[0]; if (l) { near = reportsForLake(l); label = l.name; } }
+    if (sel.kind === "place") { var p = PLACES.filter(function(x){return x.id===sel.id;})[0]; if (p) { near = reportsForPlace(p); label = p.name; } }
+    var list = (feedFilter === "near" && near) ? near : REPORTS;
+
+    panelBody.innerHTML =
+      '<div class="detail-body">'+
+      (near ? '<div class="seg" role="group"><button data-feed="all" aria-pressed="'+(feedFilter==="all")+'">All reports</button>'+
+              '<button data-feed="near" aria-pressed="'+(feedFilter==="near")+'">Near '+esc(label)+"</button></div>" : "")+
+      '<div class="advisory"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">'+
+      '<path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'+
+      '<path d="M8 6.2v3.4M8 11.6v.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'+
+      "<div>These are unverified observations submitted by the public, not official warnings and not checked by anyone. "+
+      (reportMode === "server" ? "They are shared with everyone using this site." : "They are saved only in this browser, because no server is connected.")+"</div></div>"+
+      '<button class="btn btn-primary btn-block" id="feed-new" style="margin-bottom:14px">Submit a report</button>'+
+      '<div class="sec-h">'+(feedFilter==="near"?"Near "+esc(label):"All reports")+' <span class="sec-n">'+list.length+"</span></div>"+
+      (list.length ? list.map(reportCard).join("") : '<p class="empty">No reports yet. Be the first to add one.</p>')+
+      "</div>";
+
+    openPanel("Community reports");
+    panelBody.querySelectorAll("[data-feed]").forEach(function (b) {
+      b.addEventListener("click", function () { feedFilter = b.dataset.feed; openFeed(); });
+    });
+    $("#feed-new").addEventListener("click", function () { openReportModal(null); });
+    wireReportCards(panelBody);
+    if (highlightId) {
+      var node = panelBody.querySelector('[data-report="'+highlightId+'"]');
+      if (node) { node.scrollIntoView({ block:"center" }); node.style.borderColor = cssVar("--accent"); }
+    }
+  }
+
+  /* ---------- risk list ---------- */
+  var sortKey = "score", sortDir = -1;
+  function openList() {
+    var rows = LAKES.slice().sort(function (a,b) {
+      var x=a[sortKey], y=b[sortKey];
+      if (x==null) return 1; if (y==null) return -1;
+      return typeof x === "string" ? x.localeCompare(y)*sortDir : (x-y)*sortDir;
+    });
+    panelBody.innerHTML = '<div class="detail-body" style="padding:0"><div class="table-wrap"><table class="reg"><thead><tr>'+
+      '<th data-sort="name">Lake</th><th data-sort="district">District</th><th data-sort="elevation_m">Elev</th><th data-sort="score">Risk</th>'+
+      "</tr></thead><tbody>"+
+      rows.map(function (l) {
+        return '<tr data-lake="'+l.id+'"><td>'+esc(l.name)+"</td><td>"+esc(l.district)+
+          '</td><td class="num">'+(l.elevation_m||"—")+'</td><td><div style="display:flex;align-items:center;gap:7px">'+
+          sevMeter(l.level)+'<span class="num" style="color:'+colorOf(l.level)+';font-weight:600">'+l.score.toFixed(1)+"</span></div></td></tr>";
+      }).join("")+"</tbody></table></div></div>";
+    openPanel("Risk list");
+    panelBody.querySelectorAll("th[data-sort]").forEach(function (th) {
+      th.addEventListener("click", function () {
+        var k = th.dataset.sort;
+        if (sortKey === k) sortDir = -sortDir;
+        else { sortKey = k; sortDir = (k === "name" || k === "district") ? 1 : -1; }
+        openList();
+      });
+    });
+    panelBody.querySelectorAll("tr[data-lake]").forEach(function (tr) {
+      tr.addEventListener("click", function () { selectLake(tr.dataset.lake); });
+    });
+  }
+
+  /* ---------- about ---------- */
+  function openAbout() {
+    var missing = Object.keys(META.inputs).filter(function (k) { return META.inputs[k] !== "live"; });
+    panelBody.innerHTML = '<div class="detail-body">'+
+      '<div class="advisory"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">'+
+      '<path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'+
+      '<path d="M8 6.2v3.4M8 11.6v.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'+
+      "<div><b>Demonstration prototype, not a flood warning system.</b> Lake attributes are compiled from published "+
+      "literature and are approximate, and the scoring weights have not been validated by a glaciologist. Do not use "+
+      "this for safety decisions. For real warnings follow Nepal's Department of Hydrology and Meteorology.</div></div>"+
+      '<div class="sec-h">What you are looking at</div>'+
+      '<p style="font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin:0 0 14px">'+
+      "<b>NILA</b> is the Nepal Ice Lake Atlas, a map of glacial lake outburst flood (GLOF) risk. "+
+      "<i>Nila</i> (नीला) means blue, for the meltwater these lakes hold.</p>"+
+      '<p style="font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin:0 0 14px">'+
+      LAKES.length+" glacial lakes, "+PLACES.length+" downstream villages and towns, and "+EVENTS.length+
+      " recorded outburst floods across Nepal. Each lake gets a 0 to 100 score from six weighted inputs.</p>"+
+      '<div class="sec-h">How the score works</div>'+
+      '<p style="font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin:0 0 14px">'+
+      "Lake-area change 30, nearby earthquakes 20, rain and temperature 20, dam type 15, slope steepness 10, "+
+      "community reports 5. Earthquakes come live from the USGS catalogue and weather from Open-Meteo, and the "+
+      "whole score is recalculated in your browser whenever an input changes.</p>"+
+      (missing.length ? '<div class="caveat">'+missing.length+" of 6 inputs have no live data right now ("+
+        esc(missing.map(function(k){return FACTOR_LABEL[k];}).join(", ")).toLowerCase()+
+        "), so scores lean on dam type, slope and stored area history.</div>" : "")+
+      '<div class="sec-h" style="margin-top:18px">Colour and accessibility</div>'+
+      '<p style="font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin:0">'+
+      "Risk colours are a fixed status palette that never changes between light and dark, and every one is paired "+
+      "with a written level and a four-bar meter, so nothing depends on colour alone. The risk list is a full table "+
+      "view of the same data.</p></div>";
+    openPanel("About");
+  }
+
+  /* ============================================================
+     Report submission
+     ============================================================ */
+  var backdrop = null, pickTarget = null, draft = null;
+  function closeModal() { if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop); backdrop = null; }
+
+  function districtOptions(selected) {
+    return DISTRICTS.provinces.map(function (p) {
+      return '<optgroup label="'+esc(p.name)+'">'+p.districts.map(function (d) {
+        return '<option value="'+esc(d)+'"'+(d===selected?" selected":"")+">"+esc(d)+"</option>";
+      }).join("")+"</optgroup>";
+    }).join("");
+  }
+  function siteOptions(kind, id) {
+    return '<optgroup label="Glacial lakes">'+LAKES.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
+        .map(function (l) { return '<option value="lake:'+l.id+'"'+(kind==="lake"&&String(id)===String(l.id)?" selected":"")+">"+esc(l.name)+"</option>"; }).join("")+"</optgroup>"+
+      '<optgroup label="Villages and towns">'+PLACES.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
+        .map(function (p) { return '<option value="place:'+p.id+'"'+(kind==="place"&&id===p.id?" selected":"")+">"+esc(p.name)+"</option>"; }).join("")+"</optgroup>";
+  }
+
+  function openReportModal(target, prefill) {
+    closeModal();
+    draft = prefill || draft || {};
+    var scope = draft.scope || (target ? "site" : "site");
+    if (draft.lat != null) scope = "point";
+
+    backdrop = document.createElement("div");
+    backdrop.className = "backdrop";
+    backdrop.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-label="Submit a report">'+
+      '<button class="x-btn" id="m-x" aria-label="Close">✕</button>'+
+      "<h2>Submit a report</h2>"+
+      '<p class="m-sub">Tell people what you saw. Unverified community observations, shown to everyone.</p>'+
+      '<form id="rform">'+
+        '<div class="scope-opts">'+
+          '<button type="button" class="scope-opt" data-scope="site" aria-pressed="'+(scope==="site")+'">'+
+            '<span class="scope-ic">📍</span><span><span class="scope-t">A lake or village</span>'+
+            '<span class="scope-d">Pick a named place from the list</span></span></button>'+
+          '<button type="button" class="scope-opt" data-scope="point" aria-pressed="'+(scope==="point")+'">'+
+            '<span class="scope-ic">🗺️</span><span><span class="scope-t">An exact spot on the map</span>'+
+            '<span class="scope-d">'+(draft.lat != null ? "Chosen: "+draft.lat.toFixed(4)+", "+draft.lon.toFixed(4) : "Click the map to drop a pin")+"</span></span></button>"+
+          '<button type="button" class="scope-opt" data-scope="district" aria-pressed="'+(scope==="district")+'">'+
+            '<span class="scope-ic">🏔️</span><span><span class="scope-t">A district</span>'+
+            '<span class="scope-d">For a general area, if you are not sure exactly where</span></span></button>'+
+        "</div>"+
+        '<div class="field" id="f-site-wrap"><label for="f-site">Which one</label>'+
+          '<select id="f-site">'+siteOptions(target && target.kind, target && target.id)+"</select></div>"+
+        '<div class="field" id="f-district-wrap"><label for="f-district">District</label>'+
+          '<select id="f-district">'+districtOptions(draft.district)+"</select></div>"+
+        '<div class="field"><label for="f-cond">What did you see?</label><select id="f-cond" required>'+
+          '<option value="">Choose…</option>'+
+          Object.keys(COND_LABEL).map(function (k) { return '<option value="'+k+'">'+esc(COND_LABEL[k])+"</option>"; }).join("")+
+        "</select></div>"+
+        '<div class="field"><label for="f-sev">How serious does it look? <span class="sev-out" id="sev-out">2</span> of 5</label>'+
+          '<input id="f-sev" type="range" min="1" max="5" value="2"></div>'+
+        '<div class="field"><label for="f-text">Details</label><textarea id="f-text" maxlength="1200" placeholder="What does it look like? When did you see it?"></textarea></div>'+
+        '<div class="field"><label for="f-who">Your name (optional)</label><input id="f-who" maxlength="80" placeholder="Anonymous"></div>'+
+        '<div class="hp"><label>Website<input id="f-hp" tabindex="-1" autocomplete="off"></label></div>'+
+        '<button class="btn btn-primary btn-block" type="submit" id="f-submit">Submit report</button>'+
+        '<p class="form-note">'+(reportMode === "server"
+          ? "Saved to the shared database and visible to everyone on this site."
+          : "No server connected, so this is saved in this browser only.")+
+        " Obvious spam is filtered automatically.</p>"+
+      "</form></div>";
+    document.body.appendChild(backdrop);
+
+    function syncScope() {
+      backdrop.querySelectorAll("[data-scope]").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.dataset.scope === scope));
+      });
+      $("#f-site-wrap").style.display = scope === "site" ? "" : "none";
+      $("#f-district-wrap").style.display = scope === "district" ? "" : "none";
+    }
+    syncScope();
+
+    backdrop.addEventListener("click", function (e) { if (e.target === backdrop) closeModal(); });
+    $("#m-x").addEventListener("click", closeModal);
+    $("#f-sev").addEventListener("input", function () { $("#sev-out").textContent = this.value; });
+    backdrop.querySelectorAll("[data-scope]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (b.dataset.scope === "point") { startPicking(); return; }
+        scope = b.dataset.scope; syncScope();
+      });
+    });
+    $("#rform").addEventListener("submit", function (e) { e.preventDefault(); submitReport(scope); });
+  }
+
+  function startPicking() {
+    draft = {
+      scope:"point",
+      condition: $("#f-cond") ? $("#f-cond").value : "",
+      severity: $("#f-sev") ? $("#f-sev").value : 2,
+      body: $("#f-text") ? $("#f-text").value : "",
+      reporter: $("#f-who") ? $("#f-who").value : ""
+    };
+    closeModal();
+    closePanel();
+    document.body.classList.add("picking");
+    pickTarget = true;
+  }
+  function stopPicking() { document.body.classList.remove("picking"); pickTarget = null; }
+  $("#pick-cancel").addEventListener("click", function () { stopPicking(); openReportModal(null, draft); });
+
+  map.on("click", function (e) {
+    if (!pickTarget) return;
+    draft.lat = e.latlng.lat; draft.lon = e.latlng.lng;
+    stopPicking();
+    openReportModal(null, draft);
+  });
+
+  function submitReport(scope) {
+    if ($("#f-hp").value.trim()) { closeModal(); return; }
+    var cond = $("#f-cond").value;
+    if (!cond) { toast("Choose what you saw."); return; }
+
+    var payload = {
+      scope: scope,
+      condition: cond,
+      severity: parseInt($("#f-sev").value, 10),
+      body: $("#f-text").value.trim(),
+      reporter: $("#f-who").value.trim(),
+      website: ""
+    };
+
+    if (scope === "site") {
+      var parts = $("#f-site").value.split(":");
+      var obj = parts[0] === "lake"
+        ? LAKES.filter(function (l) { return String(l.id) === parts[1]; })[0]
+        : PLACES.filter(function (p) { return p.id === parts[1]; })[0];
+      if (!obj) { toast("Choose a place."); return; }
+      payload.target_kind = parts[0];
+      payload.target_id = parts[1];
+      payload.target_name = obj.name;
+      payload.district = obj.district || null;
+      payload.lat = obj.lat; payload.lon = obj.lon;
+    } else if (scope === "district") {
+      payload.district = $("#f-district").value;
+      var c = DISTRICTS.centroids[payload.district];
+      if (c) { payload.lat = c[0]; payload.lon = c[1]; }
+    } else {
+      payload.lat = draft.lat; payload.lon = draft.lon;
+      if (payload.lat == null) { toast("Pick a spot on the map first."); return; }
+    }
+
+    var btn = $("#f-submit");
+    btn.disabled = true; btn.textContent = "Sending…";
+
+    function finish(rec, note) {
+      REPORTS.unshift(rec);
+      draft = null;
+      closeModal();
+      refreshAfterReports();
+      feedFilter = "all";
+      openFeed(rec.id);
+      if (rec.lat != null) focusOn(rec.lat, rec.lon, Math.max(map.getZoom(), 11));
+      toast(note);
+    }
+
+    if (reportMode === "server") {
+      fetch("/api/reports", { method:"POST", headers:{ "content-type":"application/json" }, body:JSON.stringify(payload) })
+        .then(function (r) { return r.json().then(function (j) { return { ok:r.ok, j:j }; }); })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.j && res.j.error || "failed");
+          finish(res.j.report, res.j.published === false
+            ? "Report received, but held back for review."
+            : "Report published. Everyone on this site can see it.");
+        })
+        .catch(function (err) {
+          btn.disabled = false; btn.textContent = "Submit report";
+          toast("Could not send: " + err.message);
+        });
+    } else {
+      var rec = Object.assign({}, payload, { id:"local-"+Date.now(), created_at:new Date().toISOString() });
+      var all = loadLocal(); all.unshift(rec);
+      var ok = saveLocal(all);
+      finish(rec, ok ? "Saved in this browser." : "Shown here, but this browser blocked saving.");
+    }
+  }
+
+  function refreshAfterReports() {
+    recompute();
+    buildLakeMarkers();
+    buildReportMarkers();
+    paintSelection();
+  }
+
+  /* ---------- load reports ---------- */
+  function loadReports() {
+    // Opened straight from disk there is no server to ask, and attempting the
+    // request would only log a CORS error. Go straight to local storage.
+    if (location.protocol !== "http:" && location.protocol !== "https:") {
+      REPORTS = loadLocal(); reportMode = "local";
+      return Promise.resolve();
+    }
+    return fetch("/api/reports?limit=300", { headers:{ accept:"application/json" } })
+      .then(function (r) { if (!r.ok) throw new Error("no api"); return r.json(); })
+      .then(function (d) {
+        REPORTS = d.reports || [];
+        reportMode = "server";
+      })
+      .catch(function () {
+        REPORTS = loadLocal();
+        reportMode = "local";
+      });
+  }
+
+  /* ============================================================
+     Search
+     ============================================================ */
+  var results = $("#results"), qInput = $("#q");
+  function runSearch() {
+    var q = qInput.value.trim().toLowerCase();
+    if (!q) { results.innerHTML = ""; return; }
+    var out = [];
+    LAKES.forEach(function (l) {
+      if ((l.name+" "+l.district+" "+l.basin).toLowerCase().indexOf(q) !== -1)
+        out.push({ t:"lake", id:l.id, name:l.name, sub:l.district+" district · risk "+l.score.toFixed(1), ic:"◆", col:colorOf(l.level) });
+    });
+    PLACES.forEach(function (p) {
+      if ((p.name+" "+p.district).toLowerCase().indexOf(q) !== -1)
+        out.push({ t:"place", id:p.id, name:p.name, sub:p.district+" district · "+(p.elevation_m||0).toLocaleString()+" m", ic:"◇" });
+    });
+    DISTRICTS.provinces.forEach(function (pr) {
+      pr.districts.forEach(function (d) {
+        if (d.toLowerCase().indexOf(q) !== -1)
+          out.push({ t:"district", id:d, name:d+" district", sub:pr.name+" province", ic:"▣" });
+      });
+    });
+    out = out.slice(0, 12);
+    results.innerHTML = out.length ? out.map(function (r, i) {
+      return '<button class="res" data-t="'+r.t+'" data-id="'+esc(r.id)+'" '+(i===0?'data-first="1"':"")+">"+
+        '<span class="res-ic" style="color:'+(r.col||"var(--muted)")+'">'+r.ic+"</span>"+
+        '<span class="res-main"><span class="res-name">'+esc(r.name)+'</span><span class="res-sub">'+esc(r.sub)+"</span></span></button>";
+    }).join("") : '<div style="padding:12px;color:var(--muted);font-size:12.5px">Nothing matches that.</div>';
+    results.querySelectorAll(".res").forEach(function (b) {
+      b.addEventListener("click", function () { pickResult(b.dataset.t, b.dataset.id); });
+    });
+  }
+  function pickResult(t, id) {
+    qInput.value = ""; results.innerHTML = "";
+    if (t === "lake") selectLake(id);
+    else if (t === "place") selectPlace(id);
+    else {
+      var c = DISTRICTS.centroids[id];
+      if (c) map.flyTo(c, 9, { duration:.8 });
+      else toast("No coordinates stored for " + id + " district.");
+    }
+  }
+  qInput.addEventListener("input", runSearch);
+  qInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      var f = results.querySelector("[data-first]");
+      if (f) f.click();
+    }
+    if (e.key === "Escape") { qInput.value = ""; results.innerHTML = ""; qInput.blur(); }
+  });
+  document.addEventListener("click", function (e) {
+    if (!$("#search-wrap").contains(e.target)) results.innerHTML = "";
+  });
+
+  /* ============================================================
+     Live data
+     ============================================================ */
+  function setLive(state, text) {
+    live.state = state;
+    $("#live-dot").className = "live-dot " + (state === "live" ? "ok" : state === "loading" ? "busy" : "warn");
+    $("#live-text").textContent = text;
+  }
+  function withTimeout(url, ms) {
+    var c = new AbortController(), t = setTimeout(function () { c.abort(); }, ms || 12000);
+    return fetch(url, { signal:c.signal }).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error("HTTP "+r.status); return r.json(); });
+  }
+  function iso(d) { return d.toISOString().slice(0,10); }
+  function fetchQuakes() {
+    var end = new Date(), start = new Date(end - 90*864e5);
+    return withTimeout("https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime="+iso(start)+
+      "&endtime="+iso(end)+"&minmagnitude=3&minlatitude=24&maxlatitude=32.5&minlongitude=78&maxlongitude=92&orderby=time")
+      .then(function (d) {
+        var evs = (d.features||[]).map(function (f) { return { lat:f.geometry.coordinates[1], lon:f.geometry.coordinates[0], mag:f.properties.mag }; })
+          .filter(function (e) { return e.mag != null; });
+        var out = {};
+        LAKES.forEach(function (l) {
+          var count = 0, maxMag = null;
+          evs.forEach(function (e) { if (haversineKm(l, e) <= 100) { count++; if (maxMag == null || e.mag > maxMag) maxMag = e.mag; } });
+          out[l.id] = { available:true, count:count, maxMag:maxMag };
+        });
+        return out;
+      });
+  }
+  function sumDaily(o, k) {
+    var v = ((o||{}).daily||{})[k] || [], n = v.filter(function (x) { return x != null; });
+    return { sum:n.reduce(function (a,b) { return a+b; }, 0), n:n.length };
+  }
+  function fetchClimate() {
+    var lats = LAKES.map(function (l) { return l.lat; }).join(",");
+    var lons = LAKES.map(function (l) { return l.lon; }).join(",");
+    var today = new Date(), rs = new Date(today - 30*864e5);
+    var bs = new Date(rs); bs.setFullYear(bs.getFullYear()-5);
+    var be = new Date(today - 864e5); be.setFullYear(be.getFullYear()-5);
+    return Promise.all([
+      withTimeout("https://api.open-meteo.com/v1/forecast?latitude="+lats+"&longitude="+lons+"&daily=precipitation_sum,temperature_2m_mean&past_days=30&forecast_days=1&timezone=UTC"),
+      withTimeout("https://archive-api.open-meteo.com/v1/archive?latitude="+lats+"&longitude="+lons+"&start_date="+iso(bs)+"&end_date="+iso(be)+"&daily=precipitation_sum,temperature_2m_mean&timezone=UTC")
+    ]).then(function (res) {
+      var rec = Array.isArray(res[0])?res[0]:[res[0]], base = Array.isArray(res[1])?res[1]:[res[1]], out = {};
+      LAKES.forEach(function (l, i) {
+        var rp=sumDaily(rec[i],"precipitation_sum"), rt=sumDaily(rec[i],"temperature_2m_mean");
+        var bp=sumDaily(base[i],"precipitation_sum"), bt=sumDaily(base[i],"temperature_2m_mean");
+        if (!rt.n || !bt.n) { out[l.id] = { available:false }; return; }
+        out[l.id] = { available:true, precipAnomPct: bp.sum>0 ? (rp.sum-bp.sum)/bp.sum*100 : 0, tempAnomC: rt.sum/rt.n - bt.sum/bt.n };
+      });
+      return out;
+    });
+  }
+  function fetchLive() {
+    setLive("loading", "Fetching live data…");
+    return Promise.allSettled([fetchQuakes(), fetchClimate()]).then(function (res) {
+      var a = res[0].status === "fulfilled", b = res[1].status === "fulfilled";
+      if (a) live.seis = res[0].value;
+      if (b) live.clim = res[1].value;
+      live.at = new Date();
+      if (a && b) setLive("live", "Live: USGS quakes + Open-Meteo");
+      else if (a || b) setLive("partial", a ? "Partly live: quakes only" : "Partly live: weather only");
+      else setLive("offline", "Offline: stored data only");
+      recompute(); buildLakeMarkers(); paintSelection();
+      if (sel.kind === "lake") selectLake(sel.id);
+    });
+  }
+
+  /* ---------- layers ---------- */
+  var layerState = { places:true, events:true, reports:true };
+  function openLayers() {
+    panelBody.innerHTML = '<div class="detail-body">'+
+      '<div class="sec-h">Base map</div>'+
+      '<div class="seg" id="base-seg">'+baseNames.map(function (n, i) {
+        return '<button data-base="'+i+'" aria-pressed="'+(i===baseIdx)+'">'+n+"</button>"; }).join("")+"</div>"+
+      '<div class="sec-h" style="margin-top:16px">Show on the map</div>'+
+      [["places","Villages and towns",PLACES.length],["events","Past outburst floods",EVENTS.length],["reports","Community reports",REPORTS.filter(function(r){return r.lat!=null;}).length]]
+        .map(function (row) {
+          return '<button class="rel" data-layer="'+row[0]+'" style="--bar:'+(layerState[row[0]]?"var(--accent)":"var(--line-strong)")+'">'+
+            '<span class="rel-bar"></span><span class="rel-main"><span class="rel-name">'+row[1]+"</span><br>"+
+            '<span class="rel-sub">'+row[2]+" on the map</span></span>"+
+            '<span class="rel-right"><span class="chip">'+(layerState[row[0]]?"On":"Off")+"</span></span></button>";
+        }).join("")+
+      '<div class="caveat" style="margin-top:12px">All three basemaps load from Esri and need no API key. '+
+      "If you are offline you still get the Nepal outline and every marker.</div></div>";
+    openPanel("Layers");
+    panelBody.querySelectorAll("[data-base]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        map.removeLayer(bases[baseNames[baseIdx]]);
+        baseIdx = parseInt(b.dataset.base, 10);
+        bases[baseNames[baseIdx]].addTo(map);
+        bases[baseNames[baseIdx]].bringToBack();
+        openLayers();
+      });
+    });
+    panelBody.querySelectorAll("[data-layer]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var k = b.dataset.layer;
+        layerState[k] = !layerState[k];
+        var lyr = k === "places" ? placeCluster : k === "events" ? eventLayer : reportLayer;
+        if (layerState[k]) map.addLayer(lyr); else map.removeLayer(lyr);
+        openLayers();
+      });
+    });
+  }
+
+  /* ---------- deep links ---------- */
+  function setHash(kind, id) { try { history.replaceState(null, "", "#"+kind+"-"+id); } catch (e) {} }
+  function readHash() {
+    var m = (location.hash||"").replace("#","").match(/^(lake|place|event)-(.+)$/);
+    if (!m) return false;
+    if (m[1] === "lake" && LAKES.some(function (l) { return String(l.id) === m[2]; })) { selectLake(m[2]); return true; }
+    if (m[1] === "place" && PLACES.some(function (p) { return p.id === m[2]; })) { selectPlace(m[2]); return true; }
+    if (m[1] === "event" && EVENTS.some(function (e) { return e.id === m[2]; })) { selectEvent(m[2]); return true; }
+    return false;
+  }
+
+  /* ---------- toast ---------- */
+  var toastEl = null, toastTimer = null;
+  function toast(msg) {
+    if (toastEl && toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
+    toastEl = document.createElement("div");
+    toastEl.className = "toast"; toastEl.setAttribute("role","status"); toastEl.textContent = msg;
+    document.body.appendChild(toastEl);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { if (toastEl && toastEl.parentNode) toastEl.parentNode.removeChild(toastEl); toastEl = null; }, 4600);
+  }
+
+  /* ---------- controls ---------- */
+  $("#fab-in").addEventListener("click", function () { map.zoomIn(); });
+  $("#fab-out").addEventListener("click", function () { map.zoomOut(); });
+  $("#fab-reset").addEventListener("click", function () { map.flyTo(NEPAL, 7, { duration:.7 }); closePanel(); });
+  $("#fab-report").addEventListener("click", function () { openReportModal(sel.kind === "lake" || sel.kind === "place" ? sel : null); });
+  $("#fab-feed").addEventListener("click", function () { feedFilter = "all"; openFeed(); });
+  $("#fab-list").addEventListener("click", openList);
+  $("#fab-layers").addEventListener("click", openLayers);
+  $("#btn-info").addEventListener("click", openAbout);
+  $("#lg-head").addEventListener("click", function () { $("#legend").classList.toggle("min"); });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { closeModal(); if (pickTarget) stopPicking(); return; }
+    var tag = (e.target.tagName||"").toLowerCase();
+    if (tag === "input" || tag === "textarea" || tag === "select") return;
+    if (e.key === "/") { e.preventDefault(); qInput.focus(); }
+    else if (e.key.toLowerCase() === "r") { e.preventDefault(); openReportModal(sel.kind === "lake" || sel.kind === "place" ? sel : null); }
+    else if (e.key.toLowerCase() === "a") openFeed();
+    else if (e.key.toLowerCase() === "l") openList();
+  });
+
+  /* ---------- boot ---------- */
+  recompute();
+  buildLakeMarkers(); buildPlaceMarkers(); buildEventMarkers();
+  setLive("loading", "Checking live data…");
+
+  loadReports().then(function () {
+    recompute();
+    buildLakeMarkers(); buildReportMarkers();
+    // Lead with what this is and what it is not, rather than an arbitrary lake.
+    if (!readHash()) openAbout();
+    return fetchLive();
+  });
+})();
+</script>
