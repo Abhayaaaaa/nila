@@ -168,26 +168,68 @@ body.picking .marker-cluster { pointer-events:none !important; }
 }
 .panel-body { overflow-y:auto; flex:1; }
 
-/* FABs */
-#fabs { right:12px; bottom:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+/* FABs. Every action carries a written label, not just a glyph: the icon set
+   here is not conventional enough for anyone to guess "▦" means a risk table. */
+#fabs { right:12px; bottom:12px; display:flex; flex-direction:column; gap:8px; align-items:flex-end; z-index:600; }
 .fab {
   border:1px solid var(--line); background:var(--surface); color:var(--ink);
   border-radius:12px; box-shadow:var(--shadow); cursor:pointer;
-  width:44px; height:44px; display:flex; align-items:center; justify-content:center; font-size:17px;
+  min-width:44px; height:44px; padding:0 13px; gap:10px;
+  display:flex; align-items:center; justify-content:flex-start; font-size:13px;
 }
+.fab .ic { width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke-width:1.55; stroke-linecap:round; stroke-linejoin:round; }
+.fab .lbl { font-weight:500; white-space:nowrap; }
 .fab:hover { border-color:var(--line-strong); }
 .fab[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
-.fab-wide {
-  width:auto; padding:0 16px; gap:8px; font-size:14px; font-weight:600;
-  background:var(--accent); border-color:var(--accent); color:var(--accent-ink);
-}
+.fab-wide { font-size:14px; font-weight:600; background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
 .fab-wide:hover { filter:brightness(1.08); border-color:var(--accent); }
-.fab-group { display:flex; flex-direction:column; border-radius:12px; overflow:hidden; box-shadow:var(--shadow); border:1px solid var(--line); }
+.fab-group { display:flex; flex-direction:column; align-items:stretch; border-radius:12px; overflow:hidden; box-shadow:var(--shadow); border:1px solid var(--line); background:var(--surface); }
 .fab-group .fab { border:none; border-radius:0; box-shadow:none; border-bottom:1px solid var(--line); }
 .fab-group .fab:last-child { border-bottom:none; }
+#fab-zoom .fab { justify-content:center; padding:0; }
+.fab:disabled { opacity:.45; cursor:default; }
+.fab.busy .ic { animation:spin .9s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* 3D terrain canvas, layered over the Leaflet map and below the floating UI */
+#map3d { position:absolute; inset:0; z-index:1; background:var(--map-bg); }
+#map3d[hidden] { display:none !important; }
+body.mode3d #map { visibility:hidden; }
+body.mode3d #legend .lg-row.two-d { display:none; }
+.mk3d { cursor:pointer; }
+.mk3d i {
+  display:block; width:15px; height:15px; border-radius:50%;
+  border:2.5px solid #fff; box-shadow:0 1px 6px rgba(0,0,0,.55);
+}
+.mk3d.big i { width:21px; height:21px; }
+/* MapLibre parks its attribution bottom-right, directly under the button
+   stack, where it gets clipped. Attribution is a licence condition for both
+   Esri and Tilezen, so move it clear rather than shrink it away. */
+#map3d .maplibregl-ctrl-bottom-right { right:126px; bottom:2px; }
+#map3d .maplibregl-ctrl-attrib {
+  max-width:min(48vw, 470px); font-size:10px; line-height:1.5;
+  background:color-mix(in srgb, var(--surface) 86%, transparent) !important;
+  color:var(--muted); border-radius:6px 6px 0 0;
+}
+#map3d .maplibregl-ctrl-attrib a { color:var(--muted); }
+#map3d .maplibregl-ctrl-attrib-button { background-color:var(--surface); }
+
+/* byline */
+#credit { left:12px; bottom:12px; z-index:500; transition:left .28s cubic-bezier(.4,0,.2,1); }
+body.panel-open #credit { left:400px; }
+#credit a {
+  display:inline-flex; align-items:center; gap:6px; text-decoration:none;
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  border:1px solid var(--line); border-radius:999px; padding:5px 11px;
+  font-size:11px; color:var(--muted); box-shadow:var(--shadow-sm);
+}
+#credit a:hover { color:var(--ink); border-color:var(--line-strong); }
+#credit b { font-weight:600; color:var(--ink-soft); }
+#credit a:hover b { color:var(--ink); }
+#credit svg { width:10px; height:10px; fill:none; stroke:currentColor; stroke-width:1.3; stroke-linecap:round; stroke-linejoin:round; opacity:.75; }
 
 /* legend */
-#legend { left:12px; bottom:12px; padding:10px 12px; font-size:11px; transition:left .28s cubic-bezier(.4,0,.2,1); }
+#legend { left:12px; bottom:52px; padding:10px 12px; font-size:11px; transition:left .28s cubic-bezier(.4,0,.2,1); }
 body.panel-open #legend { left:400px; }
 #legend.min .lg-body { display:none; }
 .lg-head { display:flex; align-items:center; gap:8px; cursor:pointer; }
@@ -258,6 +300,19 @@ body.picking #pickbar { display:flex; }
 .rel-score { font-family:var(--font-mono); font-size:12px; font-weight:600; }
 
 .caveat { font-size:11px; color:var(--muted); line-height:1.55; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:9px 11px; margin-top:4px; }
+
+/* "Getting around" key in the About panel. Carries the labels that the phone
+   layout has to drop from the buttons themselves. */
+.howto { margin:0 0 16px; }
+.howto-row { display:grid; grid-template-columns:86px 1fr; gap:10px; padding:6px 0; border-bottom:1px solid var(--line); font-size:12px; line-height:1.5; }
+.howto-row:last-child { border-bottom:none; }
+.howto-row b { font-weight:600; color:var(--ink); }
+.howto-row span { color:var(--muted); }
+
+.byline { margin-top:20px; padding-top:14px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-soft); }
+.byline b { font-weight:600; color:var(--ink); }
+.byline-sub { font-size:11.5px; color:var(--muted); margin-top:3px; line-height:1.55; }
+.byline a { color:var(--accent); }
 .empty { font-size:12.5px; color:var(--muted); margin:0 0 10px; }
 
 .btn { border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:9px 15px; border-radius:9px; cursor:pointer; font-size:13px; font-weight:500; }
@@ -339,11 +394,25 @@ table.reg tbody tr:hover { background:var(--surface-2); }
   #panel.open { transform:none; }
   #fabs { bottom:10px; right:10px; }
   body.panel-open #fabs { bottom:calc(66vh + 10px); }
+  /* No room for labels next to a bottom sheet, so the icons go it alone here.
+     The About panel opens on first visit and lists what each one does. */
+  .fab .lbl { display:none; }
+  .fab { padding:0; justify-content:center; }
+  /* Pinch zoom is universal on touch, and the button column has to fit above an
+     open bottom sheet. With the zoom group in, the stack ran 372px tall against
+     255px of room and pushed Report, the primary action, clean off the top of
+     the screen on first visit. */
+  #fab-zoom { display:none; }
+  #credit { left:10px; bottom:10px; }
+  body.panel-open #credit { left:10px; display:none; }
+  #map3d .maplibregl-ctrl-bottom-right { right:60px; }
+  #map3d .maplibregl-ctrl-attrib { max-width:calc(100vw - 140px); }
 }
 @media (prefers-reduced-motion: reduce) { * { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
 </style>
 
 <div id="map"></div>
+<div id="map3d" hidden></div>
 
 <div class="ui card" id="search-wrap">
   <div class="searchbar">
@@ -368,17 +437,46 @@ table.reg tbody tr:hover { background:var(--surface-2); }
 </aside>
 
 <div class="ui" id="fabs">
-  <button class="fab fab-wide" id="fab-report"><span>＋</span> Report</button>
+  <button class="fab fab-wide" id="fab-report" title="Report a condition you have seen (R)">
+    <svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14.6s5-4.3 5-8.1A5 5 0 0 0 3 6.5c0 3.8 5 8.1 5 8.1Z"/><path d="M8 4.1v4.8M5.6 6.5h4.8"/></svg>
+    <span class="lbl">Report</span>
+  </button>
   <div class="fab-group">
-    <button class="fab" id="fab-feed" title="All reports" aria-label="All reports">☰</button>
-    <button class="fab" id="fab-list" title="Risk list" aria-label="Risk list">▦</button>
-    <button class="fab" id="fab-layers" title="Layers" aria-label="Layers">◧</button>
+    <button class="fab" id="fab-feed" title="Every report, newest first (A)" aria-label="All reports">
+      <svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 4h10.8M2.6 8h10.8M2.6 12h6.8"/></svg>
+      <span class="lbl">Reports</span>
+    </button>
+    <button class="fab" id="fab-list" title="All 24 lakes ranked by risk (L)" aria-label="Risk list">
+      <svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="2.2" y="2.7" width="11.6" height="10.6" rx="1.6"/><path d="M2.2 6.4h11.6M6.3 6.4v6.9"/></svg>
+      <span class="lbl">Risk list</span>
+    </button>
+    <button class="fab" id="fab-3d" title="Tilt into 3D terrain" aria-label="3D terrain view" aria-pressed="false">
+      <svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.4 11.6 6 4.2l2.9 4.6 1.8-2.4 3.9 5.2Z"/><path d="M1.4 11.6h13.2"/></svg>
+      <span class="lbl">3D view</span>
+    </button>
+    <button class="fab" id="fab-layers" title="Basemap and what is shown" aria-label="Layers">
+      <svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.9 14.6 5.5 8 9.1 1.4 5.5Z"/><path d="M1.4 8.7 8 12.3l6.6-3.6"/></svg>
+      <span class="lbl">Layers</span>
+    </button>
   </div>
-  <div class="fab-group">
-    <button class="fab" id="fab-in" title="Zoom in" aria-label="Zoom in">＋</button>
-    <button class="fab" id="fab-out" title="Zoom out" aria-label="Zoom out">−</button>
-    <button class="fab" id="fab-reset" title="Reset view" aria-label="Reset view">⤾</button>
+  <div class="fab-group" id="fab-zoom">
+    <button class="fab" id="fab-in" title="Zoom in" aria-label="Zoom in">
+      <svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.4v9.2M3.4 8h9.2"/></svg>
+    </button>
+    <button class="fab" id="fab-out" title="Zoom out" aria-label="Zoom out">
+      <svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.4 8h9.2"/></svg>
+    </button>
+    <button class="fab" id="fab-reset" title="Back to the whole country" aria-label="Reset view">
+      <svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 8a5.2 5.2 0 1 1-1.7-3.9"/><path d="M13.4 1.9v3.3h-3.3"/></svg>
+    </button>
   </div>
+</div>
+
+<div class="ui" id="credit">
+  <a href="https://github.com/Abhayaaaaa/nila" target="_blank" rel="noopener noreferrer">
+    Built by <b>Abhaya Shrestha</b>
+    <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M4.4 1.8h5.8v5.8M10.2 1.8 4 8"/><path d="M8 7.6v2.6H1.8V4h2.6"/></svg>
+  </a>
 </div>
 
 <div class="ui card" id="legend">
@@ -388,8 +486,8 @@ table.reg tbody tr:hover { background:var(--surface-2); }
     <div class="lg-row"><span class="lg-dot" style="background:var(--r-high)"></span>High · 50–74</div>
     <div class="lg-row"><span class="lg-dot" style="background:var(--r-medium)"></span>Medium · 25–49</div>
     <div class="lg-row"><span class="lg-dot" style="background:var(--r-low)"></span>Low · under 25</div>
-    <div class="lg-row" style="margin-top:6px"><span class="lg-sq"></span>Village or town</div>
-    <div class="lg-row"><span class="lg-ring"></span>Past outburst flood</div>
+    <div class="lg-row two-d" style="margin-top:6px"><span class="lg-sq"></span>Village or town</div>
+    <div class="lg-row two-d"><span class="lg-ring"></span>Past outburst flood</div>
   </div>
 </div>
 
@@ -641,6 +739,8 @@ table.reg tbody tr:hover { background:var(--surface-2); }
       lakeMarkers[l.id] = m;
       lakeCluster.addLayer(m);
     });
+    // Scores move when live data lands, so the 3D pins have to be recoloured too.
+    if (V3.map) build3dMarkers();
   }
   function buildPlaceMarkers() {
     placeCluster.clearLayers(); placeMarkers = {};
@@ -681,6 +781,11 @@ table.reg tbody tr:hover { background:var(--surface-2); }
 
   // Pan so the target is not hidden under the side panel.
   function focusOn(lat, lon, zoom) {
+    if (V3.on && V3.map) {
+      V3.map.flyTo({ center:[lon, lat], zoom: Math.min(Math.max(zoom || 12.5, 9), 15),
+                     pitch: 72, duration: 1400, essential: true });
+      return;
+    }
     var z = zoom || Math.max(map.getZoom(), 11);
     var pt = map.project([lat, lon], z);
     if (panelOpen() && window.innerWidth > 720) pt = pt.subtract([188, 0]);
@@ -1008,6 +1113,17 @@ table.reg tbody tr:hover { background:var(--surface-2); }
       '<p style="font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin:0 0 14px">'+
       LAKES.length+" glacial lakes, "+PLACES.length+" downstream villages and towns, and "+EVENTS.length+
       " recorded outburst floods across Nepal. Each lake gets a 0 to 100 score from six weighted inputs.</p>"+
+      '<div class="sec-h">Getting around</div>'+
+      '<div class="howto">'+
+      [["Click any dot", "A lake, a village or a past flood. Everything on the map opens a panel."],
+       ["Report", "Log a condition you have seen: an exact spot, a named place, or a whole district."],
+       ["Reports", "Every report anyone has filed, newest first."],
+       ["Risk list", "All "+LAKES.length+" lakes as a sortable table."],
+       ["3D view", "Tilt the camera and see the real terrain in relief. Right-drag to rotate."],
+       ["Layers", "Switch basemap and choose what is drawn."]]
+        .map(function (r) {
+          return '<div class="howto-row"><b>'+r[0]+"</b><span>"+r[1]+"</span></div>"; }).join("")+
+      "</div>"+
       '<div class="sec-h">How the score works</div>'+
       '<p style="font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin:0 0 14px">'+
       "Lake-area change 30, nearby earthquakes 20, rain and temperature 20, dam type 15, slope steepness 10, "+
@@ -1020,7 +1136,12 @@ table.reg tbody tr:hover { background:var(--surface-2); }
       '<p style="font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin:0">'+
       "Risk colours are a fixed status palette that never changes between light and dark, and every one is paired "+
       "with a written level and a four-bar meter, so nothing depends on colour alone. The risk list is a full table "+
-      "view of the same data.</p></div>";
+      "view of the same data.</p>"+
+      '<div class="byline">'+
+      "<div>Built by <b>Abhaya Shrestha</b></div>"+
+      '<div class="byline-sub">First-year CS at the University of Virginia. '+
+      'Source and write-up on <a href="https://github.com/Abhayaaaaa/nila" target="_blank" rel="noopener noreferrer">GitHub</a>.</div>'+
+      "</div></div>";
     openPanel("About");
   }
 
@@ -1120,6 +1241,9 @@ table.reg tbody tr:hover { background:var(--surface-2); }
     };
     closeModal();
     closePanel();
+    // Dropping a pin is a Leaflet interaction, and a tilted camera makes
+    // "where exactly did I click" ambiguous anyway. Come back down first.
+    if (V3.on) { exit3d(); toast("Back in 2D so you can place the pin precisely."); }
     document.body.classList.add("picking");
     pickTarget = true;
   }
@@ -1367,9 +1491,26 @@ table.reg tbody tr:hover { background:var(--surface-2); }
             '<span class="rel-sub">'+row[2]+" on the map</span></span>"+
             '<span class="rel-right"><span class="chip">'+(layerState[row[0]]?"On":"Off")+"</span></span></button>";
         }).join("")+
+      (V3.on
+        ? '<div class="sec-h" style="margin-top:16px">3D terrain</div>'+
+          '<label class="field" style="margin-bottom:6px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:500">'+
+          'Height exaggeration <b class="sev-out" id="exag-out">'+V3.exag.toFixed(1)+"×</b></span>"+
+          '<input id="exag" type="range" min="1" max="3" step="0.1" value="'+V3.exag+'"></label>'+
+          '<div class="caveat" style="margin-bottom:12px">1.0× is true scale. Anything above that stretches the '+
+          "vertical to make relief easier to read, which is normal for terrain maps but means the slopes look "+
+          "steeper than they are.</div>"
+        : "")+
       '<div class="caveat" style="margin-top:12px">All three basemaps load from Esri and need no API key. '+
       "If you are offline you still get the Nepal outline and every marker.</div></div>";
     openPanel("Layers");
+    var exag = $("#exag");
+    if (exag) {
+      exag.addEventListener("input", function () {
+        V3.exag = parseFloat(exag.value);
+        $("#exag-out").textContent = V3.exag.toFixed(1) + "×";
+        if (V3.map) V3.map.setTerrain({ source: "dem", exaggeration: V3.exag });
+      });
+    }
     panelBody.querySelectorAll("[data-base]").forEach(function (b) {
       b.addEventListener("click", function () {
         map.removeLayer(bases[baseNames[baseIdx]]);
@@ -1401,6 +1542,146 @@ table.reg tbody tr:hover { background:var(--surface-2); }
     return false;
   }
 
+  /* ============================================================
+     3D terrain view
+
+     Leaflet cannot tilt, so 3D is a second map engine (MapLibre GL)
+     layered over the same ground. MapLibre is about 1.2 MB and most
+     visits never open 3D, so it is imported on first press rather
+     than shipped with the page.
+
+     Elevation is the Tilezen terrarium DEM on AWS Open Data and
+     imagery is Esri World Imagery. Both are keyless, which is the
+     whole reason this is possible without a billing account. The DEM
+     tops out at zoom 15, so the camera is capped below that rather
+     than stretching a tile no data exists for.
+     ============================================================ */
+  var V3 = { on:false, map:null, lib:null, loading:false, markers:[], exag:1.5 };
+
+  function vendorUrl(f) { return new URL("vendor/maplibre/" + f, location.href).href; }
+
+  function loadMapLibre() {
+    if (V3.lib) return Promise.resolve(V3.lib);
+    return import(vendorUrl("maplibre-gl.mjs")).then(function (mod) {
+      var css = document.createElement("link");
+      css.rel = "stylesheet"; css.href = vendorUrl("maplibre-gl.css");
+      document.head.appendChild(css);
+      V3.lib = mod;
+      return mod;
+    });
+  }
+
+  function terrainStyle() {
+    return {
+      version: 8,
+      sources: {
+        sat: {
+          type: "raster", tileSize: 256, maxzoom: 17,
+          tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+          attribution: "Imagery &copy; Esri, Maxar, Earthstar Geographics"
+        },
+        dem: {
+          type: "raster-dem", tileSize: 256, maxzoom: 15, encoding: "terrarium",
+          tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+          attribution: 'Elevation <a href="https://github.com/tilezen/joerd" target="_blank" rel="noopener">Tilezen</a>, AWS Open Data'
+        }
+      },
+      layers: [{ id: "sat", type: "raster", source: "sat" }],
+      terrain: { source: "dem", exaggeration: V3.exag },
+      sky: {
+        "sky-color": "#8CB6DE", "horizon-color": "#D6E4EE", "fog-color": "#E4EDF3",
+        "horizon-fog-blend": 0.55, "fog-ground-blend": 0.1
+      }
+    };
+  }
+
+  function build3dMarkers() {
+    var ml = V3.lib;
+    if (!ml || !V3.map) return;
+    V3.markers.forEach(function (m) { m.remove(); });
+    V3.markers = [];
+    LAKES.forEach(function (l) {
+      var el = document.createElement("div");
+      el.className = "mk3d" + (LEVEL_RANK[l.level] >= 3 ? " big" : "");
+      el.innerHTML = '<i style="background:' + colorOf(l.level) + '"></i>';
+      el.title = l.name + " · " + l.score.toFixed(1) + " / 100";
+      el.addEventListener("click", function (ev) { ev.stopPropagation(); selectLake(l.id); });
+      V3.markers.push(new ml.Marker({ element: el, anchor: "center" })
+        .setLngLat([l.lon, l.lat]).addTo(V3.map));
+    });
+  }
+
+  function set3dLabel(on) {
+    var btn = $("#fab-3d");
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.querySelector(".lbl").textContent = on ? "Exit 3D" : "3D view";
+    btn.title = on ? "Back to the flat map" : "Tilt into 3D terrain";
+  }
+
+  function enter3d() {
+    if (V3.loading || V3.on) return;
+    var btn = $("#fab-3d");
+    V3.loading = true; btn.classList.add("busy");
+    loadMapLibre().then(function (ml) {
+      var c = map.getCenter();
+      var z = Math.min(Math.max(map.getZoom(), 8.5), 14);
+      document.body.classList.add("mode3d");
+      $("#map3d").hidden = false;
+
+      if (!V3.map) {
+        V3.map = new ml.Map({
+          container: "map3d",
+          style: terrainStyle(),
+          center: [c.lng, c.lat], zoom: z,
+          pitch: 68, bearing: 14, maxPitch: 85,
+          minZoom: 5, maxZoom: 15.5,
+          attributionControl: { compact: true }
+        });
+        // Tile failures are expected on a flaky connection and MapLibre fires
+        // one per tile. Log once rather than spamming, and never throw.
+        var warned = false;
+        V3.map.on("error", function (e) {
+          if (!warned) { warned = true; console.warn("3D tile issue", e && e.error); }
+        });
+        // Markers are added straight away rather than on the map's "load" event.
+        // "load" waits for every source to finish, so a single failing tile host
+        // means it never fires and the lakes never appear. Markers do not need
+        // the style, and MapLibre positions them on the next frame either way.
+        build3dMarkers();
+      } else {
+        V3.map.jumpTo({ center: [c.lng, c.lat], zoom: z });
+        V3.map.resize();
+        build3dMarkers();
+      }
+
+      V3.on = true;
+      set3dLabel(true);
+      toast("Drag to pan. Right-drag, or two fingers, to rotate and tilt.");
+    }).catch(function (err) {
+      console.warn("3D unavailable", err);
+      toast("3D needs the hosted site: it loads a map engine this copy of the page cannot reach.");
+      document.body.classList.remove("mode3d");
+      $("#map3d").hidden = true;
+    }).then(function () {
+      V3.loading = false; btn.classList.remove("busy");
+    });
+  }
+
+  function exit3d() {
+    if (!V3.on) return;
+    if (V3.map) {
+      var c = V3.map.getCenter();
+      map.setView([c.lat, c.lng], Math.min(Math.max(Math.round(V3.map.getZoom()), 6), 17), { animate: false });
+    }
+    V3.on = false;
+    document.body.classList.remove("mode3d");
+    $("#map3d").hidden = true;
+    set3dLabel(false);
+    map.invalidateSize();
+  }
+
+  function toggle3d() { V3.on ? exit3d() : enter3d(); }
+
   /* ---------- toast ---------- */
   var toastEl = null, toastTimer = null;
   function toast(msg) {
@@ -1413,9 +1694,18 @@ table.reg tbody tr:hover { background:var(--surface-2); }
   }
 
   /* ---------- controls ---------- */
-  $("#fab-in").addEventListener("click", function () { map.zoomIn(); });
-  $("#fab-out").addEventListener("click", function () { map.zoomOut(); });
-  $("#fab-reset").addEventListener("click", function () { map.flyTo(NEPAL, 7, { duration:.7 }); closePanel(); });
+  // The zoom and reset buttons drive whichever engine is on screen.
+  $("#fab-in").addEventListener("click", function () { (V3.on && V3.map) ? V3.map.zoomIn() : map.zoomIn(); });
+  $("#fab-out").addEventListener("click", function () { (V3.on && V3.map) ? V3.map.zoomOut() : map.zoomOut(); });
+  $("#fab-reset").addEventListener("click", function () {
+    if (V3.on && V3.map) {
+      V3.map.easeTo({ center:[NEPAL[1], NEPAL[0]], zoom:8, pitch:62, bearing:0, duration:900 });
+    } else {
+      map.flyTo(NEPAL, 7, { duration:.7 });
+    }
+    closePanel();
+  });
+  $("#fab-3d").addEventListener("click", toggle3d);
   $("#fab-report").addEventListener("click", function () { openReportModal(sel.kind === "lake" || sel.kind === "place" ? sel : null); });
   $("#fab-feed").addEventListener("click", function () { feedFilter = "all"; openFeed(); });
   $("#fab-list").addEventListener("click", openList);
@@ -1431,7 +1721,13 @@ table.reg tbody tr:hover { background:var(--surface-2); }
     else if (e.key.toLowerCase() === "r") { e.preventDefault(); openReportModal(sel.kind === "lake" || sel.kind === "place" ? sel : null); }
     else if (e.key.toLowerCase() === "a") openFeed();
     else if (e.key.toLowerCase() === "l") openList();
+    else if (e.key === "3") toggle3d();
   });
+
+  /* A small handle on the internals, for the browser console and for the
+     Playwright suite, which drives real screen coordinates and needs to read
+     camera state back. Read-only by convention; nothing in the app uses it. */
+  window.__nila = { map: map, v3: V3, lakes: LAKES, places: PLACES, reports: function () { return REPORTS; } };
 
   /* ---------- boot ---------- */
   recompute();

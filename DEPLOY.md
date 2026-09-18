@@ -16,8 +16,12 @@ Everything below happens in your browser. No terminal.
 | Part | What it is | Where it runs |
 |---|---|---|
 | `web/public/index.html` | the whole app, one file | the visitor's browser |
+| `web/public/vendor/maplibre/` | the 3D engine, fetched only if someone opens 3D | the visitor's browser |
 | `web/functions/api/reports.js` | the reports API | Cloudflare's servers |
 | D1 database | where reports are stored | Cloudflare's servers |
+
+The `vendor/maplibre/` folder has to go up with everything else. Without it the
+map still works in full, but the **3D view** button reports that it cannot load.
 
 Cloudflare Pages serves the HTML. Anything under `functions/` automatically
 becomes an API route, so `functions/api/reports.js` answers `/api/reports`.

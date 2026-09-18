@@ -23,7 +23,8 @@ server and the browser produce identical numbers from identical inputs.
 ### The hosted app
 | Piece | Why |
 |---|---|
-| Leaflet 1.9 | Map engine. Pan, zoom, touch, tile handling |
+| Leaflet 1.9 | 2D map engine. Pan, zoom, touch, tile handling |
+| MapLibre GL 6 | The 3D terrain view, lazy-loaded on first press |
 | Leaflet.markercluster | Groups dense markers, spiderfies on click |
 | Cloudflare Pages | Static hosting, free tier |
 | Cloudflare Pages Functions | The API. Any file under `functions/` becomes a route |
@@ -117,6 +118,46 @@ arithmetic matched the Python output exactly.
 
 `Promise.allSettled` is deliberate: one dead API degrades that factor to zero and
 labels it, instead of taking down the page.
+
+---
+
+## 2b. The 3D terrain view
+
+Leaflet cannot tilt. It projects to a flat plane and has no camera, so there is
+no amount of CSS that turns it into a perspective view of a mountain range.
+Adding 3D therefore meant a second map engine running over the same ground.
+
+| Piece | Choice | Why |
+|---|---|---|
+| Engine | MapLibre GL JS 6 | WebGL, real camera, `setTerrain` on a DEM source, BSD licensed |
+| Elevation | Tilezen terrarium tiles on AWS Open Data | Keyless, `elevation_m = (R*256 + G + B/256) - 32768`, zoom 15 max |
+| Imagery | Esri World Imagery | Keyless, already trusted by the 2D map |
+
+Three decisions worth recording:
+
+**It is lazy-loaded, not bundled.** MapLibre is about 1.2 MB against a 336 KB
+page, and most visits never press the button. It ships as separate files under
+`web/public/vendor/maplibre/` and is pulled in with a dynamic `import()` on
+first use. The three `.mjs` files have to stay side by side: the entry module
+imports the shared chunk by relative path and spawns its worker via
+`new URL("./maplibre-gl-worker.mjs", import.meta.url)`.
+
+**Markers are added immediately, not on the map's `load` event.** `load` waits
+for every source to finish, so one failing tile host means it never fires and
+the lakes never appear at all. Markers do not need the style. MapLibre places
+them on the terrain surface and hides them when a ridge comes between the
+marker and the camera, which is exactly the behaviour you want here.
+
+**The camera is capped below the DEM's limit.** Terrarium tops out at zoom 15,
+so the 3D camera maxes at 15.5 rather than stretching a tile that has no data
+behind it.
+
+Both engines share one selection model: clicking a lake pin in 3D runs the same
+`selectLake` as clicking a circle in 2D, and `focusOn` flies whichever camera is
+currently on screen. Leaving 3D copies the centre and zoom back to Leaflet, so
+the flat map picks up where the tilted one left off. Dropping a report pin
+forces a return to 2D first, because "where exactly did I click" is ambiguous
+under a tilted camera.
 
 ---
 
@@ -227,6 +268,7 @@ nila/
 │   └── districts.json      Nepal's 77 districts by province
 ├── web/                    ← the thing you deploy
 │   ├── public/index.html   built app
+│   ├── public/vendor/maplibre/   MapLibre, loaded only when 3D is opened
 │   ├── functions/api/reports.js   the API
 │   ├── schema.sql          D1 schema
 │   └── wrangler.toml.cli   Cloudflare config, for CLI deploys only

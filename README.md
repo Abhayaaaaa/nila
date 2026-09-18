@@ -30,13 +30,17 @@ the browser from USGS earthquake data and Open-Meteo weather.
 - **Community reports**, scoped three ways: an exact spot on the map, a named
   lake or village, or a whole district. Reports are shared between visitors
   through a Cloudflare D1 database, and they feed the score.
+- **A 3D terrain view.** Tilt the camera off the flat map and the Himalaya come
+  up in relief, with the lakes sitting in the valleys that actually drain
+  towards the villages below. Real elevation, from a DEM, not a drawing.
 - **Elevation profiles** per lake, plotted from stored elevations against
   straight-line distance to the settlements below it.
 
 ## Stack
 
 Leaflet and vanilla JavaScript on the front, inlined at build time so the page
-has no third-party runtime dependency. Cloudflare Pages for hosting, a Pages
+has no third-party runtime dependency. The 3D view is a second map engine,
+MapLibre GL, imported only when someone presses the button. Cloudflare Pages for hosting, a Pages
 Function for the reports API, and Cloudflare D1 (SQLite at the edge) for
 storage. A second, fuller implementation lives in `backend/`: Flask,
 PostgreSQL with PostGIS, and an APScheduler job that rescores on an interval.

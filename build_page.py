@@ -18,6 +18,7 @@ Emits:
 import datetime
 import json
 import os
+import shutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DIST = os.path.join(HERE, "dist")
@@ -104,6 +105,7 @@ standalone = f"""<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
 <meta name="description" content="NILA, the Nepal Ice Lake Atlas: glacial lake outburst flood (GLOF) risk screening for Nepal. A demonstration prototype, not a warning system.">
+<meta name="author" content="Abhaya Shrestha">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%94%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <style>
   *{{box-sizing:border-box}}
@@ -118,6 +120,18 @@ standalone = f"""<!DOCTYPE html>
 for path in (os.path.join(DIST, "nila.html"), os.path.join(WEB, "index.html")):
     with open(path, "w", encoding="utf-8") as f:
         f.write(standalone)
+
+# MapLibre powers the 3D terrain view. It is ~1.2 MB, and most visits never open
+# 3D, so it is served as separate files and imported on first use rather than
+# inlined like Leaflet. The three .mjs files must stay side by side: the entry
+# module imports the shared chunk by relative path and spawns its worker with
+# new URL("./maplibre-gl-worker.mjs", import.meta.url).
+ml_src = os.path.join(VENDOR, "maplibre")
+ml_dst = os.path.join(WEB, "vendor", "maplibre")
+os.makedirs(ml_dst, exist_ok=True)
+for name in ("maplibre-gl.mjs", "maplibre-gl-shared.mjs",
+             "maplibre-gl-worker.mjs", "maplibre-gl.css"):
+    shutil.copyfile(os.path.join(ml_src, name), os.path.join(ml_dst, name))
 
 print(f"lakes {len(lakes)} | places {len(settle['places'])} | events {len(events['events'])} "
       f"| districts {sum(len(p['districts']) for p in districts['provinces'])}")
