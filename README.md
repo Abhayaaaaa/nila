@@ -9,7 +9,7 @@ A map of glacial lake outburst flood (GLOF) risk in Nepal. 24 glacial lakes,
 reporting system, scored by a six-factor risk model that recalculates live in
 the browser from USGS earthquake data and Open-Meteo weather.
 
-![NILA](screenshots/n1_desktop.png)
+![NILA, the 3D terrain view over the Khumbu](screenshots/nila-3d.jpg)
 
 > **This is a demonstration prototype, not a flood warning system.** Lake
 > attributes are compiled from published literature and are approximate, and
