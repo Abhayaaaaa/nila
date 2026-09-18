@@ -1,5 +1,7 @@
 # NILA: Nepal Ice Lake Atlas
 
+### → **[nila-1qk.pages.dev](https://nila-1qk.pages.dev)**
+
 *Nila* (नीला) means blue, for the meltwater these lakes hold.
 
 A map of glacial lake outburst flood (GLOF) risk in Nepal. 24 glacial lakes,
@@ -89,7 +91,11 @@ README repeats it.
 - **Community reports** are unverified observations from strangers and are
   labelled that way everywhere they appear.
 
-## Running it
+## Running it yourself
+
+You do not need any of this to use NILA. The link at the top is the live site,
+and it updates itself whenever this repo changes. This section is for running
+the code on your own machine.
 
 ```
 python build_page.py                       # rebuild the page from template + data
